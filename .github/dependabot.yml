@@ -1,0 +1,23 @@
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: "daily"
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+      remix:
+        patterns:
+          - "@remix-run*"
+      storybook:
+        patterns:
+          - "@storybook*"
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest*"

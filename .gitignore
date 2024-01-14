@@ -1,0 +1,14 @@
+node_modules
+
+/.cache
+/build
+.env
+/coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/storybook-static
+vite.config.ts.timestamp*
+index.mjs
+db.sqlite

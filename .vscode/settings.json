@@ -1,0 +1,27 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "eslint.format.enable": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always"
+  },
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.{yml,yaml}"
+  },
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "typescript.preferences.autoImportFileExcludePatterns": [
+    "@remix-run/server-runtime",
+    "@remix-run/router",
+    "@radix-ui/**",
+    "@playwright/test",
+    "clsx"
+  ],
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "SQLite",
+      "name": "db",
+      "database": "${workspaceFolder:remix-starter}/db.sqlite"
+    }
+  ]
+}
