@@ -1,4 +1,9 @@
-import { json, redirect } from "@remix-run/node";
+import {
+  json,
+  redirect,
+  type LoaderFunctionArgs,
+  type ActionFunctionArgs,
+} from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 
 const db = {
@@ -11,11 +16,11 @@ const db = {
   },
 };
 
-export async function loader() {
+export async function loader(_: LoaderFunctionArgs) {
   return json({ count: await db.getCount() });
 }
 
-export async function action() {
+export async function action(_: ActionFunctionArgs) {
   await db.increment();
   return redirect("/counter");
 }

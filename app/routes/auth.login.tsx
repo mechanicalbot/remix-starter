@@ -5,13 +5,22 @@ import {
   type MetaFunction,
 } from "@remix-run/node";
 import { Form, useLoaderData, useNavigation } from "@remix-run/react";
-import { AuthenticityTokenInput } from "remix-utils/csrf/react";
-import { HoneypotInputs } from "remix-utils/honeypot/react";
 
-import { Button, Input, Label, Icons, Divider } from "~/components";
-import { authService } from "~/lib/auth.server";
-import { validateCSRF } from "~/lib/csrf.server";
-import { checkHoneypot } from "~/lib/honeypot.server";
+import { Input, Label, Divider } from "~/components";
+import { authService } from "~/lib/auth/auth.server";
+import {
+  socialLoginProviders,
+  loginProviderDescriptors,
+  LoginProviderForm,
+  LoginProviderButton,
+} from "~/lib/auth/loginProviders";
+import { LoginProvider } from "~/lib/auth/types";
+import { AuthenticityTokenInput } from "~/lib/csrf";
+import { csrf } from "~/lib/csrf/.server";
+import { HoneypotInputs } from "~/lib/honeypot";
+import { honeypot } from "~/lib/honeypot/.server";
+import { redirectToHelper } from "~/lib/redirectTo.server";
+import { combineHeaders } from "~/lib/web";
 
 export const meta: MetaFunction = () => {
   return [{ title: "Log in" }];
@@ -19,12 +28,15 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await authService.requireAnonymous(request);
-  const flushError = await authService.flushSession(request);
+  const flushError = await authService.flush(request);
 
   return json(
     { authError: flushError.error },
     {
-      headers: flushError.headers,
+      headers: combineHeaders(
+        flushError.headers,
+        await redirectToHelper.toHeaders(request),
+      ),
     },
   );
 }
@@ -32,9 +44,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
   await authService.requireAnonymous(request);
   const formData = await request.clone().formData();
-  await validateCSRF(formData, request.headers);
-  checkHoneypot(formData);
-  await authService.authenticate("email", request, {
+  await csrf.validate(formData, request.headers);
+  honeypot.validate(formData);
+  await authService.authenticate(LoginProvider.Email, request, {
     successRedirect: "/auth/email/verify",
     failureRedirect: "/auth/login",
   });
@@ -45,8 +57,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function Route() {
   const { authError } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
-
-  const isLoading = navigation.state === "submitting";
+  const isLoading = navigation.formAction === "/auth/login";
 
   return (
     <div className="mx-auto flex w-full flex-col justify-center space-y-6 p-4 sm:max-w-sm">
@@ -75,70 +86,35 @@ export default function Route() {
                 autoCapitalize="none"
                 autoComplete="email"
                 autoCorrect="off"
-                disabled={isLoading}
                 required
               />
               <p className="mt-1 min-h-5 text-sm font-medium text-destructive">
                 {authError?.message}
               </p>
             </div>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <Icons.Loader className={classNames.icon} />
-              ) : (
-                <Icons.Mail className={classNames.icon} />
-              )}
-              Continue with Email
-            </Button>
+            <LoginProviderButton
+              type="Continue"
+              isLoading={isLoading}
+              variant="default"
+              descriptor={loginProviderDescriptors[LoginProvider.Email]}
+            />
           </div>
         </Form>
         <Divider>or</Divider>
         <div className="flex flex-col gap-2">
-          {providers.map(({ name, action, icon }) => (
-            <Form key={name} method="POST" action={action} className="contents">
-              <Button type="submit" variant="outline" disabled={isLoading}>
-                {isLoading ? (
-                  <Icons.Loader className={classNames.icon} />
-                ) : (
-                  icon
-                )}
-                <span className="text-left">Continue with {name}</span>
-              </Button>
-            </Form>
-          ))}
+          {socialLoginProviders.map((provider) => {
+            const descriptor = loginProviderDescriptors[provider];
+
+            return (
+              <LoginProviderForm
+                type="Continue"
+                key={descriptor.type}
+                descriptor={descriptor}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
   );
 }
-
-const classNames = {
-  icon: "h-5 w-5 mr-2",
-};
-
-const providers = [
-  {
-    name: "Google",
-    icon: <Icons.Google className={classNames.icon} />,
-    action: "/auth/google",
-  },
-  {
-    name: "Apple",
-    icon: <Icons.Apple className={classNames.icon} />,
-    action: "/auth/apple",
-  },
-  {
-    name: "Twitter",
-    icon: <Icons.Twitter className={classNames.icon} />,
-    action: "/auth/twitter",
-  },
-  {
-    name: "GitHub",
-    icon: <Icons.GitHub className={classNames.icon} />,
-    action: "/auth/github",
-  },
-] satisfies ReadonlyArray<{
-  name: string;
-  icon: React.ReactNode;
-  action: string;
-}>;

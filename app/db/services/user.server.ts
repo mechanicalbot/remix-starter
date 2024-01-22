@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 import { type Db, schema } from "../db.server";
 
@@ -58,6 +58,31 @@ export class UserService {
     });
   }
 
+  removeLogin(
+    userId: string,
+    provider: schema.SelectUserLogin["provider"],
+    providerKey: string,
+  ) {
+    return this.db.transaction(async (tx) => {
+      await tx
+        .delete(schema.userLogins)
+        .where(
+          and(
+            eq(schema.userLogins.userId, userId),
+            eq(schema.userLogins.provider, provider),
+            eq(schema.userLogins.providerKey, providerKey),
+          ),
+        );
+
+      await tx
+        .update(schema.users)
+        .set({
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.users.id, userId));
+    });
+  }
+
   findLogin(provider: schema.SelectUserLogin["provider"], providerKey: string) {
     return this.db.query.userLogins
       .findFirst({
@@ -66,6 +91,14 @@ export class UserService {
             eq(userLogins.provider, provider),
             eq(userLogins.providerKey, providerKey),
           ),
+      })
+      .execute();
+  }
+
+  getLogins(userId: string) {
+    return this.db.query.userLogins
+      .findMany({
+        where: (userLogins, { eq }) => eq(userLogins.userId, userId),
       })
       .execute();
   }

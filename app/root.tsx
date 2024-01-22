@@ -1,3 +1,4 @@
+import { type MetaFunction } from "@remix-run/node";
 import {
   Form,
   Link,
@@ -8,28 +9,46 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useSubmit,
 } from "@remix-run/react";
 import { type LoaderFunctionArgs, json } from "@remix-run/server-runtime";
-import { AuthenticityTokenProvider } from "remix-utils/csrf/react";
-import { HoneypotProvider } from "remix-utils/honeypot/react";
+import { useRef } from "react";
 
-import { Button } from "~/components";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Icons,
+} from "~/components";
 import {
   GeneralErrorBoundary,
   GeneralStatusCodeError,
 } from "~/components/ErrorBoundary";
-import { authService } from "~/lib/auth.server";
-import { csrf } from "~/lib/csrf.server";
+import { authService } from "~/lib/auth/auth.server";
+import { useOptionalUser, useUser } from "~/lib/auth/hooks";
+import { AuthenticityTokenProvider } from "~/lib/csrf";
+import { csrf } from "~/lib/csrf/.server";
 import { getPublicEnv } from "~/lib/env.server";
-import { honeypot } from "~/lib/honeypot.server";
+import { HoneypotProvider } from "~/lib/honeypot";
+import { honeypot } from "~/lib/honeypot/.server";
 import { combineHeaders } from "~/lib/web";
 
 import "./styles/tailwind.css";
 
+export const meta: MetaFunction<typeof loader> = () => [
+  { title: "The App" },
+  { name: "description", content: "Welcome to The App" },
+];
+
 export async function loader({ request, context }: LoaderFunctionArgs) {
   return context.time("root#loader", async () => {
     const user = await authService.getUser(request);
-    const [csrfToken, csrfCookieHeader] = await csrf.commitToken();
+    const [csrfToken, csrfCookieHeader] = await csrf.commit();
     const honeyProps = honeypot.getInputProps();
 
     return json(
@@ -56,6 +75,7 @@ const links = [{ to: "/counter", text: "Counter" }] satisfies Array<{
 
 function App() {
   const data = useLoaderData<typeof loader>();
+  const user = useOptionalUser();
 
   return (
     <Document env={data.ENV}>
@@ -65,7 +85,6 @@ function App() {
             <Link to="/" className="text-xl font-bold">
               <span className="hover:text-primary">The App</span>
             </Link>
-            {/* TODO: collapse on mobile */}
             <ul className="flex flex-1 gap-8">
               {links.map(({ to, text }, i) => (
                 <li key={i}>
@@ -76,12 +95,8 @@ function App() {
               ))}
             </ul>
             <div>
-              {data.user ? (
-                <Form method="POST" action="/auth/logout">
-                  <Button type="submit" variant="outline">
-                    Log out
-                  </Button>
-                </Form>
+              {user ? (
+                <UserDropdown />
               ) : (
                 <Button type="submit" asChild>
                   <Link to="/auth/login">Log in</Link>
@@ -95,6 +110,45 @@ function App() {
         </main>
       </div>
     </Document>
+  );
+}
+
+function UserDropdown() {
+  const user = useUser();
+  const formRef = useRef<HTMLFormElement>(null);
+  const submit = useSubmit();
+
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full">
+          <Icons.User />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild>
+            <Link to="/settings">
+              <Icons.Settings className="mr-1.5 h-4 w-4" /> Settings
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          asChild
+          onSelect={(e) => {
+            e.preventDefault();
+            submit(formRef.current!);
+          }}
+        >
+          <Form ref={formRef} method="POST" action="/auth/logout">
+            <Icons.LogOut className="mr-1.5 h-4 w-4" />
+            Log out
+          </Form>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

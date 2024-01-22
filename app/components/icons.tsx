@@ -1,8 +1,16 @@
-import { Loader2, Mail } from "lucide-react";
+import {
+  Loader2,
+  Mail,
+  UserRound,
+  Settings,
+  LogOut,
+  Link,
+  Unlink,
+} from "lucide-react";
 
 import { cn } from "~/lib/cn";
 
-export { Mail };
+export { Mail, UserRound as User, Settings, LogOut, Link, Unlink };
 
 type IconProps = React.HTMLAttributes<SVGElement>;
 

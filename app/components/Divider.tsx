@@ -1,8 +1,13 @@
 import { type PropsWithChildren } from "react";
 
-export function Divider({ children }: PropsWithChildren) {
+import { cn } from "~/lib/cn";
+
+export function Divider({
+  className,
+  children,
+}: PropsWithChildren<{ className?: string }>) {
   return (
-    <div className="relative">
+    <div className={cn(className, "relative")}>
       <div className="absolute inset-0 flex items-center">
         <span className="w-full border-t" />
       </div>

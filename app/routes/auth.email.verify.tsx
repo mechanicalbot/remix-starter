@@ -8,14 +8,16 @@ import {
 import { Form, useLoaderData, useNavigation } from "@remix-run/react";
 import { nanoid } from "nanoid";
 import { useRef } from "react";
-import { AuthenticityTokenInput } from "remix-utils/csrf/react";
-import { HoneypotInputs } from "remix-utils/honeypot/react";
 
 import { Button, Icons, Input, Label, Divider } from "~/components";
 import { UserService } from "~/db/services/user.server";
-import { authService } from "~/lib/auth.server";
-import { validateCSRF } from "~/lib/csrf.server";
-import { checkHoneypot } from "~/lib/honeypot.server";
+import { authService } from "~/lib/auth/auth.server";
+import { LoginProvider } from "~/lib/auth/types";
+import { AuthenticityTokenInput } from "~/lib/csrf";
+import { csrf } from "~/lib/csrf/.server";
+import { HoneypotInputs } from "~/lib/honeypot";
+import { honeypot } from "~/lib/honeypot/.server";
+import { redirectToHelper } from "~/lib/redirectTo.server";
 
 export const meta: MetaFunction = () => {
   return [{ title: "Verify code" }];
@@ -24,7 +26,7 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   await authService.requireAnonymous(request);
 
-  const flush = await authService.flushSession(request);
+  const flush = await authService.flush(request);
   if (!flush.email) {
     return redirect("/auth/login");
   }
@@ -40,13 +42,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request, context }: ActionFunctionArgs) {
   await authService.requireAnonymous(request);
   const formData = await request.clone().formData();
-  await validateCSRF(formData, request.headers);
-  checkHoneypot(formData);
+  await csrf.validate(formData, request.headers);
+  honeypot.validate(formData);
 
   const url = new URL(request.url);
   const currentPath = url.pathname;
 
-  const profile = await authService.authenticate("email", request, {
+  const profile = await authService.authenticate(LoginProvider.Email, request, {
     failureRedirect: currentPath,
     successRedirect: currentPath,
   });
@@ -65,7 +67,14 @@ export async function action({ request, context }: ActionFunctionArgs) {
     console.log("New user created from code");
   }
 
-  return await authService.login(user);
+  const redirectTo = await redirectToHelper.flush(request);
+
+  return await authService.login(user, {
+    redirectTo: redirectTo.url,
+    init: {
+      headers: redirectTo.headers,
+    },
+  });
 }
 
 export default function Route() {

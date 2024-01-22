@@ -1,6 +1,8 @@
 import { relations } from "drizzle-orm";
 import { sqliteTable, text, primaryKey } from "drizzle-orm/sqlite-core";
 
+import { LoginProvider } from "~/lib/auth/types";
+
 import { users } from "./user";
 import { date } from "./utils";
 
@@ -10,7 +12,9 @@ export const userLogins = sqliteTable(
     userId: text("userId")
       .notNull()
       .references(() => users.id),
-    provider: text("provider", { enum: ["email", "github"] }).notNull(),
+    provider: text("provider", {
+      enum: Object.values(LoginProvider) as AllPermutations<LoginProvider>,
+    }).notNull(),
     providerKey: text("providerId").notNull(),
     providerEmail: text("providerEmail").notNull(),
     createdAt: date("createdAt"),
