@@ -11,7 +11,7 @@ export const userLogins = sqliteTable(
   {
     userId: text("userId")
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: "cascade" }),
     provider: text("provider", {
       enum: Object.values(LoginProvider) as AllPermutations<LoginProvider>,
     }).notNull(),

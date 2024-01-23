@@ -8,6 +8,7 @@ export interface UserSession {
 export enum LoginProvider {
   Email = "email",
   GitHub = "github",
+  Google = "google",
 }
 
 export const LoginProviderSchema = z.nativeEnum(LoginProvider);

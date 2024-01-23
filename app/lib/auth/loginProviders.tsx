@@ -30,20 +30,15 @@ export const loginProviderDescriptors: Record<
     name: "GitHub",
     icon: Icons.GitHub,
   },
-  //   [LoginProvider.Google]: {
-  //     type: LoginProvider.Google,
-  //     name: "Google",
-  //     icon: Icons.Google,
-  //   },
+  [LoginProvider.Google]: {
+    type: LoginProvider.Google,
+    name: "Google",
+    icon: Icons.Google,
+  },
   //   [LoginProvider.Apple]: {
   //     type: LoginProvider.Apple,
   //     name: "Apple",
   //     icon: Icons.Apple,
-  //   },
-  //   [LoginProvider.Twitter]: {
-  //     type: LoginProvider.Twitter,
-  //     name: "Twitter",
-  //     icon: Icons.Twitter,
   //   },
 };
 
