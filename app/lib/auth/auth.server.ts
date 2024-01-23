@@ -4,7 +4,7 @@ import {
   Authenticator,
   type Strategy,
 } from "remix-auth";
-import { GitHubStrategy } from "remix-auth-github";
+import { GoogleStrategy, GitHubStrategy } from "remix-auth-socials";
 import { TOTPStrategy } from "remix-auth-totp-dev";
 import { safeRedirect } from "remix-utils/safe-redirect";
 
@@ -17,7 +17,8 @@ import { LoginProvider, type UserSession } from "./types";
 
 export type AuthSession =
   | { provider: LoginProvider.Email; email: string; externalId: string }
-  | { provider: LoginProvider.GitHub; email: string; externalId: string };
+  | { provider: LoginProvider.GitHub; email: string; externalId: string }
+  | { provider: LoginProvider.Google; email: string; externalId: string };
 
 const secrets = process.env.COOKIE_SECRET.split(",");
 
@@ -52,12 +53,16 @@ const authenticator = new Authenticator<AuthSession>(connectionSessionStorage, {
   throwOnError: true,
 });
 
+const getCallbackUrl = (provider: LoginProvider) =>
+  `/auth/${provider}/callback`;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const providerStrategyMap: Record<LoginProvider, Strategy<AuthSession, any>> = {
+  // https://github.com/dev-xo/remix-auth-totp
   [LoginProvider.Email]: new TOTPStrategy<AuthSession>(
     {
       secret: process.env.TOTP_SECRET || "STRONG_SECRET",
-      magicLinkPath: "/auth/email/callback",
+      magicLinkPath: getCallbackUrl(LoginProvider.Email),
       totpGeneration: {
         charSet: "0123456789",
       },
@@ -77,17 +82,41 @@ const providerStrategyMap: Record<LoginProvider, Strategy<AuthSession, any>> = {
       return { provider: LoginProvider.Email, email, externalId: email };
     },
   ),
+  // https://github.com/sergiodxa/remix-auth-github
   [LoginProvider.GitHub]: new GitHubStrategy<AuthSession>(
     {
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: "/auth/github/callback",
+      callbackURL: getCallbackUrl(LoginProvider.GitHub),
     },
     async ({ profile }) => {
       const email = profile.emails[0].value;
 
       return {
         provider: LoginProvider.GitHub,
+        externalId: profile.id,
+        email,
+      };
+    },
+  ),
+  // https://github.com/pbteja1998/remix-auth-google
+  [LoginProvider.Google]: new GoogleStrategy<AuthSession>(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: getCallbackUrl(LoginProvider.Google),
+      scope: "openid email profile",
+      prompt: "select_account",
+    },
+    async ({ profile }) => {
+      if (!profile._json.email_verified) {
+        throw new Error("Email not verified");
+      }
+
+      const email = profile.emails[0].value;
+
+      return {
+        provider: LoginProvider.Google,
         externalId: profile.id,
         email,
       };

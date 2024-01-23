@@ -12,5 +12,5 @@ CREATE TABLE `userLogins` (
 	`providerEmail` text NOT NULL,
 	`createdAt` integer NOT NULL,
 	PRIMARY KEY(`provider`, `providerId`),
-	FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
 );

@@ -30,20 +30,15 @@ export const loginProviderDescriptors: Record<
     name: "GitHub",
     icon: Icons.GitHub,
   },
-  //   [LoginProvider.Google]: {
-  //     type: LoginProvider.Google,
-  //     name: "Google",
-  //     icon: Icons.Google,
-  //   },
+  [LoginProvider.Google]: {
+    type: LoginProvider.Google,
+    name: "Google",
+    icon: Icons.Google,
+  },
   //   [LoginProvider.Apple]: {
   //     type: LoginProvider.Apple,
   //     name: "Apple",
   //     icon: Icons.Apple,
-  //   },
-  //   [LoginProvider.Twitter]: {
-  //     type: LoginProvider.Twitter,
-  //     name: "Twitter",
-  //     icon: Icons.Twitter,
   //   },
 };
 
@@ -91,7 +86,7 @@ export function LoginProviderButton({
       type="submit"
       variant={variant}
       disabled={isLoading}
-      className="w-full"
+      className="flex-1"
     >
       {isLoading ? (
         <Icons.Loader className="mr-2 h-5 w-5" />

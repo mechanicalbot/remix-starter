@@ -140,7 +140,7 @@ export default function Profile() {
           </ul>
         )}
         <Divider className="my-4" />
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-evenly gap-2">
           {socialLoginProviders.map((provider) => {
             const descriptor = loginProviderDescriptors[provider];
 
@@ -168,7 +168,7 @@ function Section({
   return (
     <div className="grid items-start gap-4 sm:grid-cols-3">
       <h2 className="flex items-center text-xl font-semibold">{title}</h2>
-      <div className="col-span-2 overflow-x-visible">{children}</div>
+      <div className="overflow-x-visible sm:col-span-2">{children}</div>
     </div>
   );
 }
