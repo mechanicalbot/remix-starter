@@ -35,6 +35,11 @@ export const loginProviderDescriptors: Record<
     name: "Google",
     icon: Icons.Google,
   },
+  [LoginProvider.Facebook]: {
+    type: LoginProvider.Facebook,
+    name: "Facebook",
+    icon: Icons.Facebook,
+  },
   //   [LoginProvider.Apple]: {
   //     type: LoginProvider.Apple,
   //     name: "Apple",

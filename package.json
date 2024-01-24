@@ -4,7 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false --ignore 'vite.config.ts.timestamp*' --inspect ./server",
+    "dev": "tsx watch --clear-screen=false --ignore vite.config.ts.timestamp* --ignore 'vite.config.ts.timestamp*' --inspect ./server",
     "build": "pnpm build:server && pnpm build:remix",
     "build:remix": "remix vite:build",
     "build:server": "esbuild ./server --outfile=index.mjs --bundle --packages=external --format=esm --platform=node --sourcemap=inline",

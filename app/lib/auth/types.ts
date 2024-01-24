@@ -8,6 +8,7 @@ export interface UserSession {
 export enum LoginProvider {
   Email = "email",
   Google = "google",
+  Facebook = "facebook",
   GitHub = "github",
 }
 

@@ -4,7 +4,11 @@ import {
   Authenticator,
   type Strategy,
 } from "remix-auth";
-import { GoogleStrategy, GitHubStrategy } from "remix-auth-socials";
+import {
+  GoogleStrategy,
+  GitHubStrategy,
+  FacebookStrategy,
+} from "remix-auth-socials";
 import { TOTPStrategy } from "remix-auth-totp-dev";
 import { safeRedirect } from "remix-utils/safe-redirect";
 
@@ -15,10 +19,11 @@ import { combineResponseInits } from "~/lib/web";
 
 import { LoginProvider, type UserSession } from "./types";
 
-export type AuthSession =
-  | { provider: LoginProvider.Email; email: string; externalId: string }
-  | { provider: LoginProvider.GitHub; email: string; externalId: string }
-  | { provider: LoginProvider.Google; email: string; externalId: string };
+export type AuthSession = {
+  provider: LoginProvider;
+  email: string;
+  externalId: string;
+};
 
 const secrets = process.env.COOKIE_SECRET.split(",");
 
@@ -117,6 +122,23 @@ const providerStrategyMap: Record<LoginProvider, Strategy<AuthSession, any>> = {
 
       return {
         provider: LoginProvider.Google,
+        externalId: profile.id,
+        email,
+      };
+    },
+  ),
+  // https://github.com/manosim/remix-auth-facebook
+  [LoginProvider.Facebook]: new FacebookStrategy<AuthSession>(
+    {
+      clientID: process.env.FACEBOOK_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+      callbackURL: getCallbackUrl(LoginProvider.Facebook),
+    },
+    async ({ profile }) => {
+      const email = profile.emails[0].value;
+
+      return {
+        provider: LoginProvider.Facebook,
         externalId: profile.id,
         email,
       };
