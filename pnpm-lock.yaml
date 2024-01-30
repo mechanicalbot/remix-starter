@@ -9,8 +9,8 @@ overrides:
 
 dependencies:
   '@hono/node-server':
-    specifier: ^1.4.1
-    version: 1.4.1
+    specifier: ^1.7.0
+    version: 1.7.0
   '@radix-ui/react-checkbox':
     specifier: ^1.0.4
     version: 1.0.4(@types/react-dom@18.2.18)(@types/react@18.2.48)(react-dom@18.2.0)(react@18.2.0)
@@ -2297,8 +2297,8 @@ packages:
   /@floating-ui/utils@0.2.1:
     resolution: {integrity: sha512-9TANp6GPoMtYzQdt54kfAyMmz1+osLlXdg2ENroU7zzrtflTLrrC/lgrIfaSe+Wu0b89GKccT7vxXA0MoAIO+Q==}
 
-  /@hono/node-server@1.4.1:
-    resolution: {integrity: sha512-7jB8iMs6T2FhREs4Ugk+7rzn7d5aC6wEX3FAy67ZafzcQqqBVggcLkFPCMauaFJJyjc+bFvMOdFxJXKYsBM6MQ==}
+  /@hono/node-server@1.7.0:
+    resolution: {integrity: sha512-W+Gy16xWZMgB8hYU4XInCwE746y8V3VDTH1J3+EhUBqbCzk4zEXo1p6dv3BiCD5O6Z4aHuoCW+mRKoJgUn3ZCA==}
     engines: {node: '>=18.14.1'}
     dev: false
 
