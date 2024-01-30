@@ -31,12 +31,9 @@ import {
 } from "~/components/ErrorBoundary";
 import { authService } from "~/lib/auth/auth.server";
 import { useOptionalUser, useUser } from "~/lib/auth/hooks";
-import { AuthenticityTokenProvider } from "~/lib/csrf";
-import { csrf } from "~/lib/csrf/.server";
 import { getPublicEnv } from "~/lib/env.server";
 import { HoneypotProvider } from "~/lib/honeypot";
 import { honeypot } from "~/lib/honeypot/.server";
-import { combineHeaders } from "~/lib/web";
 
 import "./styles/tailwind.css";
 
@@ -48,23 +45,14 @@ export const meta: MetaFunction<typeof loader> = () => [
 export async function loader({ request, context }: LoaderFunctionArgs) {
   return context.time("root#loader", async () => {
     const user = await authService.getUser(request);
-    const [csrfToken, csrfCookieHeader] = await csrf.commit();
     const honeyProps = honeypot.getInputProps();
 
-    return json(
-      {
-        user,
-        csrf: csrfToken,
-        honeyProps,
-        clientIp: context.clientIp,
-        ENV: getPublicEnv(),
-      },
-      {
-        headers: combineHeaders(
-          csrfCookieHeader ? { "set-cookie": csrfCookieHeader } : null,
-        ),
-      },
-    );
+    return json({
+      user,
+      honeyProps,
+      clientIp: context.clientIp,
+      ENV: getPublicEnv(),
+    });
   });
 }
 
@@ -155,11 +143,9 @@ function UserDropdown() {
 function AppWithProviders() {
   const data = useLoaderData<typeof loader>();
   return (
-    <AuthenticityTokenProvider token={data.csrf}>
-      <HoneypotProvider {...data.honeyProps}>
-        <App />
-      </HoneypotProvider>
-    </AuthenticityTokenProvider>
+    <HoneypotProvider {...data.honeyProps}>
+      <App />
+    </HoneypotProvider>
   );
 }
 

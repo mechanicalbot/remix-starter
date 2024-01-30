@@ -3,7 +3,7 @@ import { sqliteTable, text, primaryKey } from "drizzle-orm/sqlite-core";
 
 import { LoginProvider } from "~/lib/auth/types";
 
-import { users } from "./user";
+import { users } from "./users";
 import { date } from "./utils";
 
 export const userLogins = sqliteTable(
@@ -17,7 +17,7 @@ export const userLogins = sqliteTable(
     }).notNull(),
     providerKey: text("providerId").notNull(),
     providerEmail: text("providerEmail").notNull(),
-    createdAt: date("createdAt"),
+    createdAt: date("createdAt").notNull(),
   },
   (table) => {
     return {

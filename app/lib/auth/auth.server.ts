@@ -14,6 +14,7 @@ import { safeRedirect } from "remix-utils/safe-redirect";
 
 import { type User } from "~/db/services/user.server";
 import { sendEmail } from "~/lib/email.server";
+import { invariant } from "~/lib/invariant";
 import { redirectToHelper } from "~/lib/redirectTo.server";
 import { combineResponseInits } from "~/lib/web";
 
@@ -114,9 +115,7 @@ const providerStrategyMap: Record<LoginProvider, Strategy<AuthSession, any>> = {
       prompt: "select_account",
     },
     async ({ profile }) => {
-      if (!profile._json.email_verified) {
-        throw new Error("Email not verified");
-      }
+      invariant(profile._json.email_verified, "Email not verified");
 
       const email = profile.emails[0].value;
 

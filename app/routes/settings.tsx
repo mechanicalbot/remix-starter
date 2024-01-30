@@ -14,6 +14,7 @@ import {
   loginProviderDescriptors,
   socialLoginProviders,
 } from "~/lib/auth/loginProviders";
+import { invariant } from "~/lib/invariant";
 
 export const meta: MetaFunction<typeof loader> = () => [
   {
@@ -29,9 +30,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     userService.getLogins(session.id),
   ]);
 
-  if (!user) {
-    throw new Response("User not found", { status: 404 });
-  }
+  invariant(user, "User not found");
 
   return json({
     user,

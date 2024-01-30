@@ -15,8 +15,6 @@ import {
   LoginProviderButton,
 } from "~/lib/auth/loginProviders";
 import { LoginProvider } from "~/lib/auth/types";
-import { AuthenticityTokenInput } from "~/lib/csrf";
-import { csrf } from "~/lib/csrf/.server";
 import { HoneypotInputs } from "~/lib/honeypot";
 import { honeypot } from "~/lib/honeypot/.server";
 import { redirectToHelper } from "~/lib/redirectTo.server";
@@ -44,7 +42,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
   await authService.requireAnonymous(request);
   const formData = await request.clone().formData();
-  await csrf.validate(formData, request.headers);
   honeypot.validate(formData);
   await authService.authenticate(LoginProvider.Email, request, {
     successRedirect: "/auth/email/verify",
@@ -71,7 +68,6 @@ export default function Route() {
       </div>
       <div className="grid gap-6">
         <Form method="POST">
-          <AuthenticityTokenInput />
           <HoneypotInputs />
           <div className="grid gap-2">
             <div className="grid gap-1">

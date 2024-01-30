@@ -7,8 +7,8 @@ import { date } from "./utils";
 export const users = sqliteTable("users", {
   id: text("id").primaryKey().notNull(),
   email: text("email").notNull(),
-  createdAt: date("createdAt"),
-  updatedAt: date("updatedAt"),
+  createdAt: date("createdAt").notNull(),
+  updatedAt: date("updatedAt").notNull(),
 });
 
 export type SelectUser = typeof users.$inferSelect;

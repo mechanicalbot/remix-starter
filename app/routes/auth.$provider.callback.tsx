@@ -5,6 +5,7 @@ import { type User, UserService } from "~/db/services/user.server";
 import { authService } from "~/lib/auth/auth.server";
 import { loginProviderDescriptors } from "~/lib/auth/loginProviders";
 import { LoginProviderSchema } from "~/lib/auth/types";
+import { invariant } from "~/lib/invariant";
 import { redirectToHelper } from "~/lib/redirectTo.server";
 
 async function getUser(request: Request, userService: UserService) {
@@ -62,10 +63,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
 
   if (existingLogin) {
     const user = await userService.findById(existingLogin.userId);
-    if (!user) {
-      throw Error("User not found");
-    }
-
+    invariant(user, "User not found");
     console.log("Login existing connection");
     return await login(user);
   }

@@ -1,4 +1,3 @@
-import { mergeConfig } from "vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 
 const config: StorybookConfig = {
@@ -24,20 +23,6 @@ const config: StorybookConfig = {
   },
   docs: {
     autodocs: "tag",
-  },
-  async viteFinal(config) {
-    return mergeConfig(config, {});
-    // return mergeConfig(config, {
-    //   plugins: [tsconfigPaths()],
-    //   resolve: {
-    //     alias: {
-    //       // prettier-ignore
-    //       "@remix-run/react/dist/components": "@remix-run/react/dist/esm/components",
-    //       ".prisma/client/index-browser":
-    //         "./node_modules/.prisma/client/index-browser.js",
-    //     },
-    //   },
-    // });
   },
 };
 export default config;

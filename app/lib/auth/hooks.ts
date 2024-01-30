@@ -1,6 +1,7 @@
 import { type SerializeFrom } from "@remix-run/node";
 import { useRouteLoaderData } from "@remix-run/react";
 
+import { invariant } from "~/lib/invariant";
 import { type loader as rootLoader } from "~/root.tsx";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,12 +18,11 @@ export function useOptionalUser() {
 }
 
 export function useUser() {
-  const maybeUser = useOptionalUser();
-  if (!maybeUser) {
-    throw new Error(
-      "No user found in root loader, but user is required by useUser. If user is optional, try useOptionalUser instead.",
-    );
-  }
+  const user = useOptionalUser();
+  invariant(
+    user,
+    "No user found in root loader, but user is required by useUser. If user is optional, try useOptionalUser instead.",
+  );
 
-  return maybeUser;
+  return user;
 }

@@ -13,8 +13,6 @@ import { Button, Icons, Input, Label, Divider } from "~/components";
 import { UserService } from "~/db/services/user.server";
 import { authService } from "~/lib/auth/auth.server";
 import { LoginProvider } from "~/lib/auth/types";
-import { AuthenticityTokenInput } from "~/lib/csrf";
-import { csrf } from "~/lib/csrf/.server";
 import { HoneypotInputs } from "~/lib/honeypot";
 import { honeypot } from "~/lib/honeypot/.server";
 import { redirectToHelper } from "~/lib/redirectTo.server";
@@ -42,7 +40,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request, context }: ActionFunctionArgs) {
   await authService.requireAnonymous(request);
   const formData = await request.clone().formData();
-  await csrf.validate(formData, request.headers);
   honeypot.validate(formData);
 
   const url = new URL(request.url);
@@ -97,7 +94,6 @@ export default function Route() {
 
       <div className="grid gap-6">
         <Form method="POST">
-          <AuthenticityTokenInput />
           <HoneypotInputs />
           <div className="grid gap-2">
             <div className="grid gap-1">
@@ -145,7 +141,6 @@ export default function Route() {
             }
           }}
         >
-          <AuthenticityTokenInput />
           <HoneypotInputs />
           <Button
             type="submit"
