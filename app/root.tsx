@@ -3,7 +3,6 @@ import {
   Form,
   Link,
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -178,7 +177,6 @@ function Document({
         />
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
         <NeverGonnaGiveYouUp />
       </body>
     </html>
