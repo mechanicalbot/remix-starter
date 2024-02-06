@@ -1,61 +1,76 @@
-import { getRequestListener } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { type ServerBuild } from "@remix-run/server-runtime";
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import { compress } from "hono/compress";
+import { remix } from "remix-hono/handler";
 import { getClientIPAddress } from "remix-utils/get-client-ip-address";
 
 import { createDb } from "~/db/db.server";
+import { type Measurer } from "~/lib/measurer";
 
-import { logger, remix } from "./lib/hono";
+import { cache, logger, measurer } from "./lib/hono";
 
-const paths = {
-  clientAssets: "./build/client/assets",
-  clientPublic: "./build/client",
-  server: "./build/server/index.js",
+const mode =
+  process.env.NODE_ENV === "test" || !process.env.NODE_ENV
+    ? "development"
+    : process.env.NODE_ENV;
+
+export const isProductionMode = mode === "production";
+
+/* type your Cloudflare bindings here */
+type Bindings = Record<string, never>;
+
+/* type your Hono variables (used with c.get/c.set) here */
+type Variables = {
+  measurer: Measurer;
 };
 
-const MODE = process.env.NODE_ENV || "development";
+type ContextEnv = { Bindings: Bindings; Variables: Variables };
 
-export const viteDevServer =
-  MODE === "production"
-    ? undefined
-    : await import("vite").then((vite) =>
-        vite.createServer({ server: { middlewareMode: true } }),
-      );
+export const hono = new Hono<ContextEnv>();
 
-const app = new Hono();
+hono.use("*", compress());
 
-app.use("*", compress());
-
-app.use("/assets/*", serveStatic({ root: paths.clientAssets }), (ctx, next) => {
-  ctx.header("Cache-Control", "max-age=31536000, immutable");
-  return next();
-});
-
-app.use("*", serveStatic({ root: paths.clientPublic }), (ctx, next) => {
-  // ctx.header("Cache-Control", "max-age=31536000, immutable");
-  ctx.header("Cache-Control", "max-age=3600");
-  return next();
-});
-
-app.use(logger());
-
-app.all(
-  "*",
-  remix({
-    mode: MODE,
-    build: viteDevServer
-      ? () =>
-          viteDevServer.ssrLoadModule(
-            "virtual:remix/server-build",
-          ) as Promise<ServerBuild>
-      : await import(paths.server),
-    getLoadContext: async (ctx) => ({
-      clientIp: getClientIPAddress(ctx.req.raw),
-      db: createDb(),
-    }),
-  }),
+hono.use(
+  "/assets/*",
+  cache(60 * 60 * 24 * 365), // 1 year
+  serveStatic({ root: "./build/client" }),
 );
 
-export const hono = getRequestListener(app.fetch);
+hono.use(
+  "*",
+  cache(60 * 60), // 1 day
+  serveStatic({ root: "./build/client" }),
+);
+
+hono.use(logger());
+
+hono.all("*", measurer, async (ctx, next) => {
+  let build: ServerBuild;
+  if (isProductionMode) {
+    build = (await import(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      // eslint-disable-next-line import/no-unresolved
+      "../build/server/remix.js"
+    )) as unknown as ServerBuild;
+  } else {
+    const vite = await import("vite");
+    const viteDevServer = await vite.createServer({
+      server: { middlewareMode: true },
+    });
+    build = (await viteDevServer.ssrLoadModule(
+      "virtual:remix/server-build",
+    )) as unknown as ServerBuild;
+  }
+
+  return remix({
+    mode,
+    build,
+    getLoadContext: async (ctx: Context<ContextEnv>) => ({
+      clientIp: getClientIPAddress(ctx.req.raw),
+      db: createDb(),
+      time: ctx.get("measurer").time,
+    }),
+  })(ctx, next);
+});

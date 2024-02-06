@@ -1,14 +1,20 @@
 import "dotenv/config";
 
-import http from "node:http";
+import { serve } from "@hono/node-server";
 
-import { viteDevServer, hono } from "./hono";
+import { hono, isProductionMode } from "./hono";
 
-const handler = viteDevServer?.middlewares.use(hono) ?? hono;
-const server = http.createServer(handler);
+if (isProductionMode) {
+  serve(
+    {
+      ...hono,
+      port: Number(process.env.PORT) || 3000,
+    },
+    (info) => {
+      console.log("🚀 Server started");
+      console.log("Local: \t http://localhost:" + info.port);
+    },
+  );
+}
 
-const port = 3000;
-server.listen(port, () => {
-  console.log("🚀 Server started");
-  console.log("Local: \t http://localhost:" + port);
-});
+export default hono;

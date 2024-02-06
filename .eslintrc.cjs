@@ -145,7 +145,7 @@ module.exports = {
 
     // Node
     {
-      files: [".eslintrc.js", "index.mjs", "server/**/*.{mjs,js,jsx,ts,tsx}"],
+      files: [".eslintrc.js", "server/**/*.{mjs,js,jsx,ts,tsx}"],
       env: {
         node: true,
       },
