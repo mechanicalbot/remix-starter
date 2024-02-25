@@ -14,7 +14,7 @@ import {
   GitHubStrategy,
   FacebookStrategy,
 } from "remix-auth-socials";
-import { TOTPStrategy } from "remix-auth-totp-dev";
+import { TOTPStrategy } from "remix-auth-totp";
 import { safeRedirect } from "remix-utils/safe-redirect";
 
 import { type User } from "~/db/services/user.server";
