@@ -1,14 +1,15 @@
-import { type MiddlewareHandler, type Context } from "hono";
+import { type Env, type Context } from "hono";
+import { createMiddleware } from "hono/factory";
 
 export type LoggerArgs = {
   skip?: (ctx: Context) => boolean;
   log: (message: string) => void;
 };
 
-export const logger = (
+export const logger = <TEnv extends Env = Env>(
   { skip, log }: LoggerArgs = { log: console.log },
-): MiddlewareHandler => {
-  return async function logger(ctx, next) {
+) => {
+  return createMiddleware<TEnv>(async (ctx, next) => {
     const start = Date.now();
     await next();
     const end = Date.now();
@@ -20,7 +21,7 @@ export const logger = (
     log(
       `${ctx.req.method} ${ctx.req.raw.url} ${colorStatus(ctx.res.status)} - ${end - start}ms`,
     );
-  };
+  });
 };
 
 const colorStatus = (status: number) => {

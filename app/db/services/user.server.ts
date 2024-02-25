@@ -1,20 +1,25 @@
+import { type AppLoadContext } from "@remix-run/node";
 import { eq, and } from "drizzle-orm";
 
-import { type Db, schema } from "../db.server";
+import { type Db, schema, getDb } from "../db.server";
 
 export type User = schema.SelectUser;
 
 export class UserService {
-  constructor(private readonly db: Db) {}
+  #db: Db;
+
+  constructor(context: AppLoadContext) {
+    this.#db = getDb(context);
+  }
 
   findById(id: string) {
-    return this.db.query.users
+    return this.#db.query.users
       .findFirst({ where: (users, { eq }) => eq(users.id, id) })
       .execute();
   }
 
   findByEmail(email: string) {
-    return this.db.query.users
+    return this.#db.query.users
       .findFirst({ where: (users, { eq }) => eq(users.email, email) })
       .execute();
   }
@@ -23,7 +28,7 @@ export class UserService {
     user: Omit<schema.InsertUser, "createdAt" | "updatedAt">,
     login?: Omit<schema.InsertUserLogin, "createdAt">,
   ) {
-    return this.db.transaction(async (tx) => {
+    return this.#db.transaction(async (tx) => {
       const [insertedUser] = await tx
         .insert(schema.users)
         .values({
@@ -44,7 +49,7 @@ export class UserService {
   }
 
   addLogin(login: Omit<schema.InsertUserLogin, "createdAt">) {
-    return this.db.transaction(async (tx) => {
+    return this.#db.transaction(async (tx) => {
       await tx.insert(schema.userLogins).values({
         ...login,
         createdAt: new Date(),
@@ -63,7 +68,7 @@ export class UserService {
     provider: schema.SelectUserLogin["provider"],
     providerKey: string,
   ) {
-    return this.db.transaction(async (tx) => {
+    return this.#db.transaction(async (tx) => {
       await tx
         .delete(schema.userLogins)
         .where(
@@ -84,7 +89,7 @@ export class UserService {
   }
 
   findLogin(provider: schema.SelectUserLogin["provider"], providerKey: string) {
-    return this.db.query.userLogins
+    return this.#db.query.userLogins
       .findFirst({
         where: (userLogins, { and, eq }) =>
           and(
@@ -96,7 +101,7 @@ export class UserService {
   }
 
   getLogins(userId: string) {
-    return this.db.query.userLogins
+    return this.#db.query.userLogins
       .findMany({
         where: (userLogins, { eq }) => eq(userLogins.userId, userId),
       })

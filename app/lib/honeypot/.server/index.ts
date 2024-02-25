@@ -1,21 +1,25 @@
+import { AppLoadContext } from "@remix-run/node";
 import {
   Honeypot as RemixHoneypot,
   SpamError,
 } from "remix-utils/honeypot/server";
 
-const remixHoneypot = new RemixHoneypot({
-  validFromFieldName: process.env.TESTING ? null : undefined,
-  encryptionSeed: process.env.HONEYPOT_SECRET,
-});
+export class Honeypot {
+  #honeypot: RemixHoneypot;
 
-class Honeypot {
+  constructor(context: AppLoadContext) {
+    this.#honeypot = new RemixHoneypot({
+      encryptionSeed: context.env.HONEYPOT_SECRET,
+    });
+  }
+
   getInputProps() {
-    return remixHoneypot.getInputProps();
+    return this.#honeypot.getInputProps();
   }
 
   validate(formData: FormData) {
     try {
-      remixHoneypot.check(formData);
+      this.#honeypot.check(formData);
     } catch (error) {
       if (error instanceof SpamError) {
         throw new Response("Form not submitted properly", { status: 400 });
@@ -24,5 +28,3 @@ class Honeypot {
     }
   }
 }
-
-export const honeypot = new Honeypot();

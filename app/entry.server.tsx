@@ -8,12 +8,7 @@ import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
 
-import { getPublicEnv, validateEnv } from "~/lib/env.server";
-
 const ABORT_DELAY = 5_000;
-
-validateEnv();
-global.ENV = getPublicEnv();
 
 const handleDocumentRequest: HandleDocumentRequestFunction = (
   request,

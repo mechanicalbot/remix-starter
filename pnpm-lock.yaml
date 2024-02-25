@@ -7,10 +7,15 @@ settings:
 overrides:
   '@remix-run/server-runtime': ^2.6.0
 
+patchedDependencies:
+  '@hono/node-server@1.8.1':
+    hash: z4iavg2qgj74tx7446cbvuurtu
+    path: patches/@hono__node-server@1.8.1.patch
+
 dependencies:
   '@hono/node-server':
-    specifier: ^1.7.0
-    version: 1.7.0
+    specifier: ^1.8.1
+    version: 1.8.1(patch_hash=z4iavg2qgj74tx7446cbvuurtu)
   '@radix-ui/react-checkbox':
     specifier: ^1.0.4
     version: 1.0.4(@types/react-dom@18.2.18)(@types/react@18.2.55)(react-dom@18.2.0)(react@18.2.0)
@@ -55,10 +60,10 @@ dependencies:
     version: 16.4.1
   drizzle-orm:
     specifier: ^0.29.3
-    version: 0.29.3(@cloudflare/workers-types@4.20240129.0)(@types/better-sqlite3@7.6.9)(@types/react@18.2.55)(better-sqlite3@9.4.0)(react@18.2.0)
+    version: 0.29.3(@types/better-sqlite3@7.6.9)(@types/react@18.2.55)(better-sqlite3@9.4.0)(react@18.2.0)
   hono:
-    specifier: ^3.12.11
-    version: 3.12.11
+    specifier: ^4.0.7
+    version: 4.0.7
   is-ip:
     specifier: ^5.0.1
     version: 5.0.1
@@ -98,8 +103,8 @@ dependencies:
 
 devDependencies:
   '@hono/vite-dev-server':
-    specifier: ^0.5.0
-    version: 0.5.0(hono@3.12.11)
+    specifier: ^0.8.0
+    version: 0.8.0(hono@4.0.7)
   '@playwright/test':
     specifier: ^1.41.2
     version: 1.41.2
@@ -223,9 +228,6 @@ devDependencies:
   remix-flat-routes:
     specifier: ^0.6.4
     version: 0.6.4(@remix-run/dev@2.6.0)
-  remix-hono:
-    specifier: ^0.0.15
-    version: 0.0.15(@cloudflare/workers-types@4.20240129.0)(@remix-run/react@2.6.0)(react-i18next@14.0.5)(react@18.2.0)(typescript@5.3.3)
   tailwindcss:
     specifier: ^3.4.1
     version: 3.4.1
@@ -1575,14 +1577,6 @@ packages:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: true
 
-  /@cloudflare/kv-asset-handler@0.1.3:
-    resolution: {integrity: sha512-FNcunDuTmEfQTLRLtA6zz+buIXUHj1soPvSWzzQFBC+n2lsy+CGf/NIrR3SEPCmsVNQj70/Jx2lViCpq+09YpQ==}
-    requiresBuild: true
-    dependencies:
-      mime: 2.6.0
-    dev: true
-    optional: true
-
   /@cloudflare/workerd-darwin-64@1.20240129.0:
     resolution: {integrity: sha512-DfVVB5IsQLVcWPJwV019vY3nEtU88c2Qu2ST5SQxqcGivZ52imagLRK0RHCIP8PK4piSiq90qUC6ybppUsw8eg==}
     engines: {node: '>=16'}
@@ -1627,9 +1621,6 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
-
-  /@cloudflare/workers-types@4.20240129.0:
-    resolution: {integrity: sha512-VyHbih/bqh/RN2FRxnXznG0bpBIg9RfSP1ldbAVnCXFinjOdv0zm2P/RWqOVN9+FgU5sanRltwwT7jGngxZy8w==}
 
   /@colors/colors@1.5.0:
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
@@ -2569,18 +2560,19 @@ packages:
   /@floating-ui/utils@0.2.1:
     resolution: {integrity: sha512-9TANp6GPoMtYzQdt54kfAyMmz1+osLlXdg2ENroU7zzrtflTLrrC/lgrIfaSe+Wu0b89GKccT7vxXA0MoAIO+Q==}
 
-  /@hono/node-server@1.7.0:
-    resolution: {integrity: sha512-W+Gy16xWZMgB8hYU4XInCwE746y8V3VDTH1J3+EhUBqbCzk4zEXo1p6dv3BiCD5O6Z4aHuoCW+mRKoJgUn3ZCA==}
+  /@hono/node-server@1.8.1(patch_hash=z4iavg2qgj74tx7446cbvuurtu):
+    resolution: {integrity: sha512-9ondWs/5EuyZOd/iyiRp0GQfMEq+IA+IbV8Wy2bgdr5+cC55I3xbQrqtXKprw7jJhfvq3IVw7ALiuvCEmLdCAA==}
     engines: {node: '>=18.14.1'}
+    patched: true
 
-  /@hono/vite-dev-server@0.5.0(hono@3.12.11):
-    resolution: {integrity: sha512-qIhAZaf9+xHeux81bk4SMOf1ikmtHcSUByquj90IPvyhyUc2qNVaa9CS22l7EDLUN+I1Mc6zRj7kTFLoENqL2Q==}
+  /@hono/vite-dev-server@0.8.0(hono@4.0.7):
+    resolution: {integrity: sha512-U9owUREiv4H0Mx4DI9z4I6Oxy5o/Y7DyTXVt1lrn97uu+76cSzgOUNI8NqXLZeFVVXNL+edrPXQr1ee1kTmwIw==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: '*'
     dependencies:
-      '@hono/node-server': 1.7.0
-      hono: 3.12.11
+      '@hono/node-server': 1.8.1(patch_hash=z4iavg2qgj74tx7446cbvuurtu)
+      hono: 4.0.7
       miniflare: 3.20240129.1
       minimatch: 9.0.3
     transitivePeerDependencies:
@@ -3681,24 +3673,6 @@ packages:
     resolution: {integrity: sha512-fyrgCaedtvMg9NK3en0pnOYJdtfwxUcNolezkNPUsoX57X8oQk+NkqcvzHXD2uKNij6GXmWU9NDru2IWjrO4BQ==}
     dependencies:
       '@babel/runtime': 7.23.9
-
-  /@remix-run/cloudflare@2.6.0(@cloudflare/workers-types@4.20240129.0)(typescript@5.3.3):
-    resolution: {integrity: sha512-wL6d9oaaSNherRQZI11q+qedqGDkQdu85BZYgeg6MLoMvyX2ogHe004ZIZAsAfk0LYET1YR0gY1jIGTfXaHYdg==}
-    engines: {node: '>=18.0.0'}
-    requiresBuild: true
-    peerDependencies:
-      '@cloudflare/workers-types': ^4.0.0
-      typescript: ^5.1.0
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-    dependencies:
-      '@cloudflare/kv-asset-handler': 0.1.3
-      '@cloudflare/workers-types': 4.20240129.0
-      '@remix-run/server-runtime': 2.6.0(typescript@5.3.3)
-      typescript: 5.3.3
-    dev: true
-    optional: true
 
   /@remix-run/dev@2.6.0(typescript@5.3.3)(vite@5.0.12):
     resolution: {integrity: sha512-wf5DoKxBwz3/84FNyFM6NKvQIOEv+Ukwj9DjXrDs6YLI6oSqw2XsJCxWN4lAbOxXuK37pBt1WAE8LzEMuyowsw==}
@@ -5574,12 +5548,6 @@ packages:
     dependencies:
       event-target-shim: 5.0.1
 
-  /accept-language-parser@1.5.0:
-    resolution: {integrity: sha512-QhyTbMLYo0BBGg1aWbeMG4ekWtds/31BrEU+DONOg/7ax23vxpL03Pb7/zBmha2v7vdD3AyzZVWBVGEZxKOXWw==}
-    requiresBuild: true
-    dev: true
-    optional: true
-
   /accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
     engines: {node: '>= 0.6'}
@@ -6924,7 +6892,7 @@ packages:
       - supports-color
     dev: true
 
-  /drizzle-orm@0.29.3(@cloudflare/workers-types@4.20240129.0)(@types/better-sqlite3@7.6.9)(@types/react@18.2.55)(better-sqlite3@9.4.0)(react@18.2.0):
+  /drizzle-orm@0.29.3(@types/better-sqlite3@7.6.9)(@types/react@18.2.55)(better-sqlite3@9.4.0)(react@18.2.0):
     resolution: {integrity: sha512-uSE027csliGSGYD0pqtM+SAQATMREb3eSM/U8s6r+Y0RFwTKwftnwwSkqx3oS65UBgqDOM0gMTl5UGNpt6lW0A==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
@@ -6995,7 +6963,6 @@ packages:
       sqlite3:
         optional: true
     dependencies:
-      '@cloudflare/workers-types': 4.20240129.0
       '@types/better-sqlite3': 7.6.9
       '@types/react': 18.2.55
       better-sqlite3: 9.4.0
@@ -8553,8 +8520,8 @@ packages:
     resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
     dev: true
 
-  /hono@3.12.11:
-    resolution: {integrity: sha512-LSpxVgIMR3UzyFiXZaPvqBUGqyOKG0LMZqgMn2RXz9f+YAdkHSfFQQX0dtU72fPm5GnEMh5AYXs0ek5NYgMOmA==}
+  /hono@4.0.7:
+    resolution: {integrity: sha512-1fhi9MUzMIXWqPWA7OGPTpzjQupT78rf+U6N+2vxwy7U76jUX0dmkUtp572gR+dbGR1YugLYvyg/JrgPOSoutw==}
     engines: {node: '>=16.0.0'}
 
   /hosted-git-info@2.8.9:
@@ -8578,13 +8545,6 @@ packages:
   /html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
     dev: true
-
-  /html-parse-stringify@3.0.1:
-    resolution: {integrity: sha512-KknJ50kTInJ7qIScF3jeaFRpMpE8/lfiTdzf/twXyPBLAGrLRTmkz3AdTnKeh40X8k9L2fdYwEp/42WGXIRGcg==}
-    dependencies:
-      void-elements: 3.1.0
-    dev: true
-    optional: true
 
   /html-tags@3.3.1:
     resolution: {integrity: sha512-ztqyC3kLto0e9WbNp0aeP+M3kTt+nbaIveGmUxAtZa+8iFgKLUOD4YKM5j+f3QD89bra7UeumolZHKuOXnTmeQ==}
@@ -8647,13 +8607,6 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
     dev: true
-
-  /i18next@23.8.2:
-    resolution: {integrity: sha512-Z84zyEangrlERm0ZugVy4bIt485e/H8VecGUZkZWrH7BDePG6jT73QdL9EA1tRTTVVMpry/MgWIP1FjEn0DRXA==}
-    dependencies:
-      '@babel/runtime': 7.23.9
-    dev: true
-    optional: true
 
   /iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
@@ -8730,13 +8683,6 @@ packages:
       hasown: 2.0.0
       side-channel: 1.0.5
     dev: true
-
-  /intl-parse-accept-language@1.0.0:
-    resolution: {integrity: sha512-YFMSV91JNBOSjw1cOfw2tup6hDP7mkz+2AUV7W1L1AM6ntgI75qC1ZeFpjPGMrWp+upmBRTX2fJWQ8c7jsUWpA==}
-    engines: {node: '>=14'}
-    requiresBuild: true
-    dev: true
-    optional: true
 
   /invariant@2.2.4:
     resolution: {integrity: sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==}
@@ -11184,13 +11130,6 @@ packages:
     hasBin: true
     dev: true
 
-  /pretty-cache-header@1.0.0:
-    resolution: {integrity: sha512-xtXazslu25CdnGnUkByU1RoOjK55TqwatJkjjJLg5ZAdz2Lngko/mmaUgeET36P2GMlNwh3fdM7FWBO717pNcw==}
-    engines: {node: '>=12.13'}
-    dependencies:
-      timestring: 6.0.0
-    dev: true
-
   /pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
@@ -11451,27 +11390,6 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
       react-is: 18.1.0
     dev: true
-
-  /react-i18next@14.0.5(i18next@23.8.2)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-5+bQSeEtgJrMBABBL5lO7jPdSNAbeAZ+MlFWDw//7FnVacuVu3l9EeWFzBQvZsKy+cihkbThWOAThEdH8YjGEw==}
-    peerDependencies:
-      i18next: '>= 23.2.3'
-      react: '>= 16.8.0'
-      react-dom: '*'
-      react-native: '*'
-    peerDependenciesMeta:
-      react-dom:
-        optional: true
-      react-native:
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.23.9
-      html-parse-stringify: 3.0.1
-      i18next: 23.8.2
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: true
-    optional: true
 
   /react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -11923,47 +11841,6 @@ packages:
       fs-extra: 11.2.0
       minimatch: 5.1.6
     dev: true
-
-  /remix-hono@0.0.15(@cloudflare/workers-types@4.20240129.0)(@remix-run/react@2.6.0)(react-i18next@14.0.5)(react@18.2.0)(typescript@5.3.3):
-    resolution: {integrity: sha512-s+c/16BapI3snIp76ClZITkS3AzpM6oCQvYyYTOpYyaGlbRTy8E/MzM2IrPcxGPz2yrzSzd5uy8lRTlCir0oIQ==}
-    dependencies:
-      '@remix-run/server-runtime': 2.6.0(typescript@5.3.3)
-      hono: 3.12.11
-      pretty-cache-header: 1.0.0
-    optionalDependencies:
-      '@remix-run/cloudflare': 2.6.0(@cloudflare/workers-types@4.20240129.0)(typescript@5.3.3)
-      i18next: 23.8.2
-      remix-i18next: 5.5.0(@remix-run/react@2.6.0)(@remix-run/server-runtime@2.6.0)(i18next@23.8.2)(react-i18next@14.0.5)(react@18.2.0)
-      zod: 3.22.4
-    transitivePeerDependencies:
-      - '@cloudflare/workers-types'
-      - '@remix-run/react'
-      - react
-      - react-i18next
-      - typescript
-    dev: true
-
-  /remix-i18next@5.5.0(@remix-run/react@2.6.0)(@remix-run/server-runtime@2.6.0)(i18next@23.8.2)(react-i18next@14.0.5)(react@18.2.0):
-    resolution: {integrity: sha512-QAHYlwb/0fmoSmH+t7AiJ3EhyG4SSQNQnAAPfqbkn/3UJfWO+NFFVxuggGx25FRJ3SOPexaspoiaCddcEayPAQ==}
-    requiresBuild: true
-    peerDependencies:
-      '@remix-run/react': ^1.0.0 || ^2.0.0
-      '@remix-run/server-runtime': ^2.6.0
-      i18next: ^23.1.0
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-      react-i18next: ^13.0.0 || ^14.0.0
-    dependencies:
-      '@remix-run/react': 2.6.0(react-dom@18.2.0)(react@18.2.0)(typescript@5.3.3)
-      '@remix-run/server-runtime': 2.6.0(typescript@5.3.3)
-      accept-language-parser: 1.5.0
-      i18next: 23.8.2
-      intl-parse-accept-language: 1.0.0
-      lru-cache: 7.18.3
-      react: 18.2.0
-      react-i18next: 14.0.5(i18next@23.8.2)(react-dom@18.2.0)(react@18.2.0)
-      use-consistent-value: 1.0.0(react@18.2.0)
-    dev: true
-    optional: true
 
   /remix-utils@7.5.0(@remix-run/node@2.6.0)(@remix-run/react@2.6.0)(crypto-js@4.2.0)(is-ip@5.0.1)(react@18.2.0)(zod@3.22.4):
     resolution: {integrity: sha512-vzjDhbdwK+3XxqL2LM7ZPzq0zyjb+77eAWbKhDqhnh0nlA11n3CmTtYzrZYpVf6h24+6m5mD6KnRfcdD3Zrl7w==}
@@ -12845,11 +12722,6 @@ packages:
       next-tick: 1.1.0
     dev: true
 
-  /timestring@6.0.0:
-    resolution: {integrity: sha512-wMctrWD2HZZLuIlchlkE2dfXJh7J2KDI9Dwl+2abPYg0mswQHfOAyQW3jJg1pY5VfttSINZuKcXoB3FGypVklA==}
-    engines: {node: '>=8'}
-    dev: true
-
   /tiny-invariant@1.3.1:
     resolution: {integrity: sha512-AD5ih2NlSssTCwsMznbvwMZpJ1cbhkGd2uueNxzv2jDlEeZdU04JQfRnggJQ8DrcVBGjAsCKwFBbDlVNtEMlzw==}
     dev: true
@@ -13342,18 +13214,6 @@ packages:
       react: 18.2.0
       tslib: 2.6.2
 
-  /use-consistent-value@1.0.0(react@18.2.0):
-    resolution: {integrity: sha512-enIOysu0IwqjafsUXvhZPajB6UYjxwu8w38xWaHLfVs1onIyg2c0DwPgcknxqO0TpYpAHXdFDXOp7Cs9HbTIkw==}
-    engines: {node: '>=10'}
-    requiresBuild: true
-    peerDependencies:
-      react: '>=16'
-    dependencies:
-      fast-deep-equal: 3.1.3
-      react: 18.2.0
-    dev: true
-    optional: true
-
   /use-resize-observer@9.1.0(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-R25VqO9Wb3asSD4eqtcxk8sJalvIOYBqS8MNZlpDSQ4l4xMQxC/J7Id9HoTqPq8FwULIn0PVW+OAqF2dyYbjow==}
     peerDependencies:
@@ -13591,12 +13451,6 @@ packages:
       - supports-color
       - terser
     dev: true
-
-  /void-elements@3.1.0:
-    resolution: {integrity: sha512-Dhxzh5HZuiHQhbvTW9AMetFfBHDMYpo23Uo9btPXgdYP+3T5S+p+jgNy7spra+veYhBP2dCSgxR/i2Y02h5/6w==}
-    engines: {node: '>=0.10.0'}
-    dev: true
-    optional: true
 
   /w3c-xmlserializer@5.0.0:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}

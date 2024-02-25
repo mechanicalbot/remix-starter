@@ -1,4 +1,9 @@
-import { createCookieSessionStorage, redirect } from "@remix-run/node";
+import {
+  type AppLoadContext,
+  type SessionStorage,
+  createCookieSessionStorage,
+  redirect,
+} from "@remix-run/node";
 import {
   type AuthenticateOptions,
   Authenticator,
@@ -26,133 +31,150 @@ export type AuthSession = {
   externalId: string;
 };
 
-const secrets = process.env.COOKIE_SECRET.split(",");
+export class AuthService {
+  #authSessionStorage: SessionStorage<{
+    user: UserSession;
+    issuedAt: number;
+  }>;
 
-const authSessionStorage = createCookieSessionStorage<{
-  user: UserSession;
-  issuedAt: number;
-}>({
-  cookie: {
-    name: "auth",
-    sameSite: "lax",
-    path: "/",
-    httpOnly: true,
-    secrets,
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 7, // week
-  },
-});
+  #connectionSessionStorage: SessionStorage;
 
-const connectionSessionStorage = createCookieSessionStorage({
-  cookie: {
-    name: "connection",
-    sameSite: "lax",
-    path: "/",
-    httpOnly: true,
-    secrets,
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 10, // 10 min
-  },
-});
+  #authenticator: Authenticator<AuthSession>;
 
-const authenticator = new Authenticator<AuthSession>(connectionSessionStorage, {
-  throwOnError: true,
-});
+  constructor(context: AppLoadContext) {
+    const secrets = context.env.COOKIE_SECRET.split(",");
 
-const getCallbackUrl = (provider: LoginProvider) =>
-  `/auth/${provider}/callback`;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const providerStrategyMap: Record<LoginProvider, Strategy<AuthSession, any>> = {
-  // https://github.com/dev-xo/remix-auth-totp
-  [LoginProvider.Email]: new TOTPStrategy<AuthSession>(
-    {
-      secret: process.env.TOTP_SECRET || "STRONG_SECRET",
-      magicLinkPath: getCallbackUrl(LoginProvider.Email),
-      totpGeneration: {
-        charSet: "0123456789",
+    this.#authSessionStorage = createCookieSessionStorage<{
+      user: UserSession;
+      issuedAt: number;
+    }>({
+      cookie: {
+        name: "auth",
+        sameSite: "lax",
+        path: "/",
+        httpOnly: true,
+        secrets,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7, // week
       },
-      sendTOTP: async (args) => {
-        await sendEmail({
-          to: args.email,
-          subject: "Magic Link",
-          body: `Welcome to The App!
-  The code will expire 10 minutes after you receive this email.
-  Your verification code: ${args.code}
-  Or click this magic link to continue: ${args.magicLink}
-  `,
-        });
+    });
+
+    this.#connectionSessionStorage = createCookieSessionStorage({
+      cookie: {
+        name: "connection",
+        sameSite: "lax",
+        path: "/",
+        httpOnly: true,
+        secrets,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 10, // 10 min
       },
-    },
-    async ({ email }) => {
-      return { provider: LoginProvider.Email, email, externalId: email };
-    },
-  ),
-  // https://github.com/sergiodxa/remix-auth-github
-  [LoginProvider.GitHub]: new GitHubStrategy<AuthSession>(
-    {
-      clientID: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: getCallbackUrl(LoginProvider.GitHub),
-    },
-    async ({ profile }) => {
-      const email = profile.emails[0].value;
+    });
 
-      return {
-        provider: LoginProvider.GitHub,
-        externalId: profile.id,
-        email,
-      };
-    },
-  ),
-  // https://github.com/pbteja1998/remix-auth-google
-  [LoginProvider.Google]: new GoogleStrategy<AuthSession>(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: getCallbackUrl(LoginProvider.Google),
-      scope: "openid email profile",
-      prompt: "select_account",
-    },
-    async ({ profile }) => {
-      invariant(profile._json.email_verified, "Email not verified");
+    this.#authenticator = new Authenticator<AuthSession>(
+      this.#connectionSessionStorage,
+      {
+        throwOnError: true,
+      },
+    );
 
-      const email = profile.emails[0].value;
+    const getCallbackUrl = (provider: LoginProvider) =>
+      `/auth/${provider}/callback`;
 
-      return {
-        provider: LoginProvider.Google,
-        externalId: profile.id,
-        email,
-      };
-    },
-  ),
-  // https://github.com/manosim/remix-auth-facebook
-  [LoginProvider.Facebook]: new FacebookStrategy<AuthSession>(
-    {
-      clientID: process.env.FACEBOOK_CLIENT_ID,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-      callbackURL: getCallbackUrl(LoginProvider.Facebook),
-    },
-    async ({ profile }) => {
-      const email = profile.emails[0].value;
+    const providerStrategyMap: Record<
+      LoginProvider,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Strategy<AuthSession, any>
+    > = {
+      // https://github.com/dev-xo/remix-auth-totp
+      [LoginProvider.Email]: new TOTPStrategy<AuthSession>(
+        {
+          secret: context.env.TOTP_SECRET,
+          magicLinkPath: getCallbackUrl(LoginProvider.Email),
+          totpGeneration: {
+            charSet: "0123456789",
+          },
+          sendTOTP: async (args) => {
+            await sendEmail({
+              to: args.email,
+              subject: "Magic Link",
+              body: `Welcome to The App!
+      The code will expire 10 minutes after you receive this email.
+      Your verification code: ${args.code}
+      Or click this magic link to continue: ${args.magicLink}
+      `,
+            });
+          },
+        },
+        async ({ email }) => {
+          return { provider: LoginProvider.Email, email, externalId: email };
+        },
+      ),
+      // https://github.com/sergiodxa/remix-auth-github
+      [LoginProvider.GitHub]: new GitHubStrategy<AuthSession>(
+        {
+          clientID: context.env.GITHUB_CLIENT_ID,
+          clientSecret: context.env.GITHUB_CLIENT_SECRET,
+          callbackURL: getCallbackUrl(LoginProvider.GitHub),
+        },
+        async ({ profile }) => {
+          const email = profile.emails[0].value;
 
-      return {
-        provider: LoginProvider.Facebook,
-        externalId: profile.id,
-        email,
-      };
-    },
-  ),
-};
+          return {
+            provider: LoginProvider.GitHub,
+            externalId: profile.id,
+            email,
+          };
+        },
+      ),
+      // https://github.com/pbteja1998/remix-auth-google
+      [LoginProvider.Google]: new GoogleStrategy<AuthSession>(
+        {
+          clientID: context.env.GOOGLE_CLIENT_ID,
+          clientSecret: context.env.GOOGLE_CLIENT_SECRET,
+          callbackURL: getCallbackUrl(LoginProvider.Google),
+          scope: "openid email profile",
+          prompt: "select_account",
+        },
+        async ({ profile }) => {
+          invariant(profile._json.email_verified, "Email not verified");
 
-Object.entries(providerStrategyMap).forEach(([provider, strategy]) => {
-  authenticator.use(strategy, provider);
-});
+          const email = profile.emails[0].value;
 
-class AuthService {
+          return {
+            provider: LoginProvider.Google,
+            externalId: profile.id,
+            email,
+          };
+        },
+      ),
+      // https://github.com/manosim/remix-auth-facebook
+      [LoginProvider.Facebook]: new FacebookStrategy<AuthSession>(
+        {
+          clientID: context.env.FACEBOOK_CLIENT_ID,
+          clientSecret: context.env.FACEBOOK_CLIENT_SECRET,
+          callbackURL: getCallbackUrl(LoginProvider.Facebook),
+        },
+        async ({ profile }) => {
+          const email = profile.emails[0].value;
+
+          return {
+            provider: LoginProvider.Facebook,
+            externalId: profile.id,
+            email,
+          };
+        },
+      ),
+    };
+
+    Object.entries(providerStrategyMap).forEach(([provider, strategy]) => {
+      this.#authenticator.use(strategy, provider);
+    });
+  }
+
   async getUser(request: Request) {
     const cookie = request.headers.get("cookie");
-    const authSession = await authSessionStorage.getSession(cookie);
+    const authSession = await this.#authSessionStorage.getSession(cookie);
 
     return authSession.get("user");
   }
@@ -169,22 +191,28 @@ class AuthService {
   }
 
   async requireAnonymous(request: Request): Promise<void> {
-    const user = await authService.getUser(request);
+    const user = await this.getUser(request);
     if (user) {
       throw redirect("/");
     }
   }
 
   async logout(): Promise<never> {
-    const authSession = await authSessionStorage.getSession("");
-    const connectionSession = await connectionSessionStorage.getSession("");
+    const authSession = await this.#authSessionStorage.getSession("");
+    const connectionSession =
+      await this.#connectionSessionStorage.getSession("");
 
     throw redirect("/", {
       headers: [
-        ["Set-Cookie", await authSessionStorage.destroySession(authSession)],
         [
           "Set-Cookie",
-          await connectionSessionStorage.destroySession(connectionSession),
+          await this.#authSessionStorage.destroySession(authSession),
+        ],
+        [
+          "Set-Cookie",
+          await this.#connectionSessionStorage.destroySession(
+            connectionSession,
+          ),
         ],
       ],
     });
@@ -197,7 +225,7 @@ class AuthService {
       init?: ResponseInit;
     } = {},
   ): Promise<never> {
-    const authSession = await authSessionStorage.getSession();
+    const authSession = await this.#authSessionStorage.getSession();
     const userSession: UserSession = {
       id: user.id,
       email: user.email,
@@ -205,16 +233,21 @@ class AuthService {
     authSession.set("user", userSession);
     authSession.set("issuedAt", Date.now());
 
-    const connectionSession = await connectionSessionStorage.getSession();
+    const connectionSession = await this.#connectionSessionStorage.getSession();
 
     throw redirect(
       safeRedirect(options.redirectTo, "/"),
       combineResponseInits(options.init, {
         headers: new Headers([
-          ["Set-Cookie", await authSessionStorage.commitSession(authSession)],
           [
             "Set-Cookie",
-            await connectionSessionStorage.destroySession(connectionSession),
+            await this.#authSessionStorage.commitSession(authSession),
+          ],
+          [
+            "Set-Cookie",
+            await this.#connectionSessionStorage.destroySession(
+              connectionSession,
+            ),
           ],
         ]),
       }),
@@ -234,7 +267,7 @@ class AuthService {
     };
 
     try {
-      const result = await authenticator.authenticate(
+      const result = await this.#authenticator.authenticate(
         provider,
         request,
         authOptions,
@@ -244,11 +277,13 @@ class AuthService {
       });
     } catch (error: unknown) {
       if (error instanceof Response) {
-        const session = await connectionSessionStorage.getSession(
+        const session = await this.#connectionSessionStorage.getSession(
           error.headers.get("set-cookie"),
         );
 
-        const profile = session.get(authenticator.sessionKey) as AuthSession;
+        const profile = session.get(
+          this.#authenticator.sessionKey,
+        ) as AuthSession;
         if (profile) {
           return profile;
         }
@@ -259,15 +294,18 @@ class AuthService {
   }
 
   async flush(request: Request) {
-    const session = await connectionSessionStorage.getSession(
+    const session = await this.#connectionSessionStorage.getSession(
       request.headers.get("Cookie"),
     );
-    const error = session.get(authenticator.sessionErrorKey) as
+    const error = session.get(this.#authenticator.sessionErrorKey) as
       | undefined
       | { message: string };
     const email = session.get("auth:email") as undefined | string;
     const headers = new Headers([
-      ["Set-Cookie", await connectionSessionStorage.commitSession(session)],
+      [
+        "Set-Cookie",
+        await this.#connectionSessionStorage.commitSession(session),
+      ],
     ]);
 
     return {
@@ -277,5 +315,3 @@ class AuthService {
     };
   }
 }
-
-export const authService = new AuthService();

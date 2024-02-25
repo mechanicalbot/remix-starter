@@ -11,19 +11,20 @@ import { useRef } from "react";
 
 import { Button, Icons, Input, Label, Divider } from "~/components";
 import { UserService } from "~/db/services/user.server";
-import { authService } from "~/lib/auth/auth.server";
+import { AuthService } from "~/lib/auth/auth.server";
 import { LoginProvider } from "~/lib/auth/types";
 import { HoneypotInputs } from "~/lib/honeypot";
-import { honeypot } from "~/lib/honeypot/.server";
+import { Honeypot } from "~/lib/honeypot/.server";
 import { redirectToHelper } from "~/lib/redirectTo.server";
 
 export const meta: MetaFunction = () => {
   return [{ title: "Verify code" }];
 };
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  await authService.requireAnonymous(request);
+export async function loader({ request, context }: LoaderFunctionArgs) {
+  const authService = new AuthService(context);
 
+  await authService.requireAnonymous(request);
   const flush = await authService.flush(request);
   if (!flush.email) {
     return redirect("/auth/login");
@@ -38,6 +39,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
+  const authService = new AuthService(context);
+  const honeypot = new Honeypot(context);
+  const userService = new UserService(context);
+
   await authService.requireAnonymous(request);
   const formData = await request.clone().formData();
   honeypot.validate(formData);
@@ -49,8 +54,6 @@ export async function action({ request, context }: ActionFunctionArgs) {
     failureRedirect: currentPath,
     successRedirect: currentPath,
   });
-
-  const userService = new UserService(context.db);
 
   const email = profile.email;
   let user = await userService.findByEmail(email);

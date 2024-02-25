@@ -2,7 +2,7 @@ import { type SerializeFrom } from "@remix-run/node";
 import { useRouteLoaderData } from "@remix-run/react";
 
 import { invariant } from "~/lib/invariant";
-import { type loader as rootLoader } from "~/root.tsx";
+import { type loader as rootLoader } from "~/root";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isUser(user: any): user is SerializeFrom<typeof rootLoader>["user"] {

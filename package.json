@@ -31,7 +31,7 @@
     "docker:run": "docker run -it --rm -p 3000:3000 --env-file ./.env remix-starter"
   },
   "dependencies": {
-    "@hono/node-server": "^1.7.0",
+    "@hono/node-server": "^1.8.1",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@radix-ui/react-label": "^2.0.2",
@@ -47,7 +47,7 @@
     "crypto-js": "^4.2.0",
     "dotenv": "^16.4.1",
     "drizzle-orm": "^0.29.3",
-    "hono": "^3.12.11",
+    "hono": "^4.0.7",
     "is-ip": "^5.0.1",
     "isbot": "^4.4.0",
     "lucide-react": "^0.323.0",
@@ -62,7 +62,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@hono/vite-dev-server": "^0.5.0",
+    "@hono/vite-dev-server": "^0.8.0",
     "@playwright/test": "^1.41.2",
     "@remix-run/dev": "^2.6.0",
     "@remix-run/testing": "^2.6.0",
@@ -104,7 +104,6 @@
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "remix-flat-routes": "^0.6.4",
-    "remix-hono": "^0.0.15",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.7.0",
@@ -116,6 +115,9 @@
   "pnpm": {
     "overrides": {
       "@remix-run/server-runtime": "$@remix-run/server-runtime"
+    },
+    "patchedDependencies": {
+      "@hono/node-server@1.8.1": "patches/@hono__node-server@1.8.1.patch"
     }
   },
   "engines": {

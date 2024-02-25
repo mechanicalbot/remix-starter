@@ -7,7 +7,7 @@ import {
 import { Form, useLoaderData, useNavigation } from "@remix-run/react";
 
 import { Input, Label, Divider } from "~/components";
-import { authService } from "~/lib/auth/auth.server";
+import { AuthService } from "~/lib/auth/auth.server";
 import {
   socialLoginProviders,
   loginProviderDescriptors,
@@ -16,7 +16,7 @@ import {
 } from "~/lib/auth/loginProviders";
 import { LoginProvider } from "~/lib/auth/types";
 import { HoneypotInputs } from "~/lib/honeypot";
-import { honeypot } from "~/lib/honeypot/.server";
+import { Honeypot } from "~/lib/honeypot/.server";
 import { redirectToHelper } from "~/lib/redirectTo.server";
 import { combineHeaders } from "~/lib/web";
 
@@ -24,7 +24,9 @@ export const meta: MetaFunction = () => {
   return [{ title: "Log in" }];
 };
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
+  const authService = new AuthService(context);
+
   await authService.requireAnonymous(request);
   const flushError = await authService.flush(request);
 
@@ -39,10 +41,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
   );
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
+  const authService = new AuthService(context);
+  const honeypot = new Honeypot(context);
+
   await authService.requireAnonymous(request);
   const formData = await request.clone().formData();
   honeypot.validate(formData);
+
   await authService.authenticate(LoginProvider.Email, request, {
     successRedirect: "/auth/email/verify",
     failureRedirect: "/auth/login",

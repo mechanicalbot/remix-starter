@@ -1,7 +1,9 @@
-import { type ActionFunctionArgs } from "@remix-run/server-runtime";
+import { type ActionFunctionArgs } from "@remix-run/node";
 
-import { authService } from "~/lib/auth/auth.server";
+import { AuthService } from "~/lib/auth/auth.server";
 
-export async function action(_: ActionFunctionArgs) {
-  await authService.logout();
+export async function action({ context }: ActionFunctionArgs) {
+  const authService = new AuthService(context);
+
+  return await authService.logout();
 }

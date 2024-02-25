@@ -1,4 +1,8 @@
-import { type MetaFunction } from "@remix-run/node";
+import {
+  type MetaFunction,
+  type LoaderFunctionArgs,
+  json,
+} from "@remix-run/node";
 import {
   Form,
   Link,
@@ -10,7 +14,6 @@ import {
   useLoaderData,
   useSubmit,
 } from "@remix-run/react";
-import { type LoaderFunctionArgs, json } from "@remix-run/server-runtime";
 import { useRef } from "react";
 
 import {
@@ -28,11 +31,11 @@ import {
   GeneralErrorBoundary,
   GeneralStatusCodeError,
 } from "~/components/ErrorBoundary";
-import { authService } from "~/lib/auth/auth.server";
+import { AuthService } from "~/lib/auth/auth.server";
 import { useOptionalUser, useUser } from "~/lib/auth/hooks";
 import { getPublicEnv } from "~/lib/env.server";
 import { HoneypotProvider } from "~/lib/honeypot";
-import { honeypot } from "~/lib/honeypot/.server";
+import { Honeypot } from "~/lib/honeypot/.server";
 
 import "./styles/tailwind.css";
 
@@ -43,6 +46,9 @@ export const meta: MetaFunction<typeof loader> = () => [
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   return context.time("root#loader", async () => {
+    const authService = new AuthService(context);
+    const honeypot = new Honeypot(context);
+
     const user = await authService.getUser(request);
     const honeyProps = honeypot.getInputProps();
 
@@ -50,7 +56,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       user,
       honeyProps,
       clientIp: context.clientIp,
-      ENV: getPublicEnv(),
+      ENV: getPublicEnv(context.env),
     });
   });
 }

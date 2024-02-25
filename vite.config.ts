@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import devServer, { defaultOptions } from "@hono/vite-dev-server";
 import { unstable_vitePlugin as remix } from "@remix-run/dev";
 import { flatRoutes } from "remix-flat-routes";
@@ -35,4 +36,14 @@ export default defineConfig({
       exclude: [/^\/(app)\/.+/, ...defaultOptions.exclude],
     }),
   ],
+  test: {
+    include: ["./app/**/*.{test,spec}.{ts,tsx}"],
+    environment: "jsdom",
+    setupFiles: ["./tests/setup/setup-test-env.ts"],
+    globalSetup: ["./tests/setup/global-setup.ts"],
+    coverage: {
+      include: ["app/**/*.{ts,tsx}"],
+      all: true,
+    },
+  },
 });

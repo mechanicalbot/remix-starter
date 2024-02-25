@@ -8,7 +8,7 @@ import { Form, useLoaderData, useNavigation } from "@remix-run/react";
 
 import { Button, Divider, Icons, Input, Label } from "~/components";
 import { UserService } from "~/db/services/user.server";
-import { authService } from "~/lib/auth/auth.server";
+import { AuthService } from "~/lib/auth/auth.server";
 import {
   LoginProviderForm,
   loginProviderDescriptors,
@@ -23,8 +23,10 @@ export const meta: MetaFunction<typeof loader> = () => [
 ];
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
+  const authService = new AuthService(context);
+  const userService = new UserService(context);
+
   const session = await authService.requireUser(request);
-  const userService = new UserService(context.db);
   const [user, logins] = await Promise.all([
     userService.findById(session.id),
     userService.getLogins(session.id),
@@ -39,10 +41,11 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
+  const authService = new AuthService(context);
+  const userService = new UserService(context);
+
   const session = await authService.requireUser(request);
   const formData = await request.formData();
-
-  const userService = new UserService(context.db);
 
   await userService.removeLogin(
     session.id,

@@ -2,13 +2,17 @@ import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { nanoid } from "nanoid";
 
 import { type User, UserService } from "~/db/services/user.server";
-import { authService } from "~/lib/auth/auth.server";
+import { AuthService } from "~/lib/auth/auth.server";
 import { loginProviderDescriptors } from "~/lib/auth/loginProviders";
 import { LoginProviderSchema } from "~/lib/auth/types";
 import { invariant } from "~/lib/invariant";
 import { redirectToHelper } from "~/lib/redirectTo.server";
 
-async function getUser(request: Request, userService: UserService) {
+async function getUser(
+  request: Request,
+  authService: AuthService,
+  userService: UserService,
+) {
   const currentSession = await authService.getUser(request);
   if (!currentSession) {
     return undefined;
@@ -24,13 +28,15 @@ async function getUser(request: Request, userService: UserService) {
 }
 
 export async function loader({ params, request, context }: LoaderFunctionArgs) {
+  const authService = new AuthService(context);
+  const userService = new UserService(context);
+
   const provider = LoginProviderSchema.parse(params.provider);
   const profile = await authService.authenticate(provider, request, {
     failureRedirect: "/auth/login",
   });
 
-  const userService = new UserService(context.db);
-  const currentUser = await getUser(request, userService);
+  const currentUser = await getUser(request, authService, userService);
   const existingLogin = await userService.findLogin(
     profile.provider,
     profile.externalId,

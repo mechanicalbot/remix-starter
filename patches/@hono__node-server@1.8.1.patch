@@ -1,0 +1,13 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 78546a18c6b4b580cf1d3bdf6263d8e06ee9cf65..c7876d49876995dc2aebb8ca106e24b2b5380457 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -12,7 +12,7 @@ var Request = class extends GlobalRequest {
+     }
+     if (options?.body instanceof ReadableStream) {
+       ;
+-      options.duplex = "half";
++      options.duplex ??= "half";
+     }
+     super(input, options);
+   }
