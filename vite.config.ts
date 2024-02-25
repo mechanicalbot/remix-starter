@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
 import devServer, { defaultOptions } from "@hono/vite-dev-server";
-import { unstable_vitePlugin as remix } from "@remix-run/dev";
+import { vitePlugin as remix } from "@remix-run/dev";
 import { flatRoutes } from "remix-flat-routes";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -13,6 +13,7 @@ export default defineConfig({
   },
   plugins: [
     !isStorybook &&
+      process.env.NODE_ENV !== "test" &&
       remix({
         serverBuildFile: "remix.js",
         ignoredRouteFiles: ["**/*"],
