@@ -95,8 +95,8 @@ dependencies:
     specifier: ^7.5.0
     version: 7.5.0(@remix-run/node@2.7.2)(@remix-run/react@2.7.2)(crypto-js@4.2.0)(is-ip@5.0.1)(react@18.2.0)(zod@3.22.4)
   sonner:
-    specifier: ^1.4.1
-    version: 1.4.1(react-dom@18.2.0)(react@18.2.0)
+    specifier: ^1.4.2
+    version: 1.4.2(react-dom@18.2.0)(react@18.2.0)
   zod:
     specifier: ^3.22.4
     version: 3.22.4
@@ -12272,8 +12272,8 @@ packages:
       is-fullwidth-code-point: 5.0.0
     dev: true
 
-  /sonner@1.4.1(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-KJcFbMF+z2OMSJ9H+N6mrk/ffnEzuyLFlHoza/HQvNyiACoY958VtFdC7xD9D74ttzA+kcS1YIJOsNwbKWDsHw==}
+  /sonner@1.4.2(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-x3Kfzfhb56V/ErvUnH5dZcsu6QkZpyIlRAogO4vAbN+AkBsA/8CFqOV+5djqbE5pQCpejtO4JBWL1zRj2sO/Vg==}
     peerDependencies:
       react: ^18.0.0
       react-dom: ^18.0.0
