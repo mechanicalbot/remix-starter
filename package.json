@@ -50,7 +50,7 @@
     "hono": "^4.0.7",
     "is-ip": "^5.0.1",
     "isbot": "^5.1.0",
-    "lucide-react": "^0.340.0",
+    "lucide-react": "^0.343.0",
     "nanoid": "^5.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
