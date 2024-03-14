@@ -1,8 +1,12 @@
 import "dotenv/config";
 
+import fs from "node:fs";
+
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { Hono } from "hono";
 import { env as getEnv } from "hono/adapter";
 import { compress } from "hono/compress";
@@ -46,16 +50,19 @@ hono.all(
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         // eslint-disable-next-line import/no-unresolved
-        () => import("../build/server/remix.js")
+        () => import("../build/server/remix.js") as Promise<ServerBuild>
       : importDevBuild,
     getLoadContext: (ctx) => ({
       env: EnvSchema.parse(getEnv(ctx)),
       clientIp: getClientIPAddress(ctx.req.raw),
-      db: new Database("db.sqlite"),
+      db: new Database("./db/db.sqlite"),
       time: ctx.var.measurer.time,
     }),
   }),
 );
+
+console.log("Migrating database...");
+migrateDb();
 
 if (isProduction) {
   serve(
@@ -68,6 +75,16 @@ if (isProduction) {
       console.log("Local: \t http://localhost:" + info.port);
     },
   );
+}
+
+function migrateDb() {
+  if (!fs.existsSync("./db")) {
+    fs.mkdirSync("./db");
+  }
+  const db = new Database("./db/db.sqlite");
+  migrate(drizzle(db), {
+    migrationsFolder: "./app/db/migrations",
+  });
 }
 
 export default hono;

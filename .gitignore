@@ -10,4 +10,4 @@ node_modules
 /playwright/.cache/
 /storybook-static
 vite.config.ts.timestamp*
-db.sqlite
+db/

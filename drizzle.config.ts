@@ -4,7 +4,7 @@ export default defineConfig({
   schema: "./app/db/schema",
   driver: "better-sqlite",
   dbCredentials: {
-    url: "db.sqlite",
+    url: "db/db.sqlite",
   },
   verbose: true,
   strict: true,

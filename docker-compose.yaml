@@ -1,0 +1,19 @@
+version: "3.8"
+services:
+  web:
+    build:
+      context: .
+    volumes:
+      - ./db/:/app/db/
+    ports:
+      - 3000
+    environment:
+      - COOKIE_SECRET=$COOKIE_SECRET
+      - HONEYPOT_SECRET=$HONEYPOT_SECRET
+      - TOTP_SECRET=$TOTP_SECRET
+      - GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID
+      - GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET
+      - GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+      - FACEBOOK_CLIENT_ID=$FACEBOOK_CLIENT_ID
+      - FACEBOOK_CLIENT_SECRET=$FACEBOOK_CLIENT_SECRET
