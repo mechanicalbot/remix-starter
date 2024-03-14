@@ -15,4 +15,5 @@ storybook-static
 tests
 playwright.config.ts
 vitest.config.ts
-db.sqlite
+db/
+docker-compose.yaml

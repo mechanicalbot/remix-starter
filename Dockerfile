@@ -12,7 +12,7 @@ RUN pnpm install --frozen-lockfile --prod=false
 FROM base as prod-deps
 COPY --from=deps /app/node_modules /app/node_modules
 ADD package.json pnpm-lock.yaml .npmrc ./
-RUN pnpm prune --prod --no-optional
+RUN HUSKY=0 pnpm prune --prod --no-optional
 
 FROM base as build
 COPY --from=deps /app/node_modules /app/node_modules
@@ -21,6 +21,7 @@ RUN pnpm build
 
 FROM base as app
 COPY --from=prod-deps /app/node_modules /app/node_modules
+COPY --from=build /app/app/db/migrations /app/app/db/migrations
 COPY --from=build /app/build /app/build
 COPY --from=build /app/package.json /app/package.json
 EXPOSE 3000
