@@ -111,7 +111,7 @@ jobs:
         run: pnpm test:e2e:run
 
       - name: 📊 Upload report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ always() && !env.ACT }}
         with:
           name: playwright-report
