@@ -29,7 +29,7 @@ jobs:
           node-version: 20.11.0
 
       - name: 📥 Download deps
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v3
         with:
           version: 8
           run_install: true
@@ -50,7 +50,7 @@ jobs:
           node-version: 20.11.0
 
       - name: 📥 Download deps
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v3
         with:
           version: 8
           run_install: true
@@ -71,7 +71,7 @@ jobs:
           node-version: 20.11.0
 
       - name: 📥 Download deps
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v3
         with:
           version: 8
           run_install: true
@@ -96,7 +96,7 @@ jobs:
           node-version: 20.11.0
 
       - name: 📥 Download deps
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v3
         with:
           version: 8
           run_install: true
