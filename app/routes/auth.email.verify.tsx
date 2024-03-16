@@ -25,15 +25,15 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const authService = new AuthService(context);
 
   await authService.requireAnonymous(request);
-  const flush = await authService.flush(request);
-  if (!flush.email) {
+  const flash = await authService.flash(request);
+  if (!flash.email) {
     return redirect("/auth/login");
   }
 
   return json(
-    { authError: flush.error },
+    { authError: flash.error },
     {
-      headers: flush.headers,
+      headers: flash.headers,
     },
   );
 }
@@ -67,7 +67,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     console.log("New user created from code");
   }
 
-  const redirectTo = await redirectToHelper.flush(request);
+  const redirectTo = await redirectToHelper.flash(request);
 
   return await authService.login(user, {
     redirectTo: redirectTo.url,

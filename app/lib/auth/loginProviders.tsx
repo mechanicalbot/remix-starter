@@ -13,7 +13,6 @@ export type LoginProviderDescriptor = {
   type: LoginProvider;
   name: string;
   icon: React.ComponentType<{ className?: string }>;
-  skipCreation?: boolean;
 };
 
 export const loginProviderDescriptors: Record<
@@ -92,6 +91,7 @@ export function LoginProviderButton({
       variant={variant}
       disabled={isLoading}
       className="flex-1"
+      title={`${type} with ${descriptor.name}`}
     >
       {isLoading ? (
         <Icons.Loader className="mr-2 h-5 w-5" />

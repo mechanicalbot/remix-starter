@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Icons,
+  TooltipProvider,
 } from "~/components";
 import {
   GeneralErrorBoundary,
@@ -148,9 +149,11 @@ function UserDropdown() {
 function AppWithProviders() {
   const data = useLoaderData<typeof loader>();
   return (
-    <HoneypotProvider {...data.honeyProps}>
-      <App />
-    </HoneypotProvider>
+    <TooltipProvider>
+      <HoneypotProvider {...data.honeyProps}>
+        <App />
+      </HoneypotProvider>
+    </TooltipProvider>
   );
 }
 

@@ -293,7 +293,7 @@ export class AuthService {
     }
   }
 
-  async flush(request: Request) {
+  async flash(request: Request) {
     const session = await this.#connectionSessionStorage.getSession(
       request.headers.get("Cookie"),
     );

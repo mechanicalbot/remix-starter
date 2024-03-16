@@ -5,6 +5,8 @@ import { type Db, schema, getDb } from "../db.server";
 
 export type User = schema.SelectUser;
 
+export type UserLogin = schema.SelectUserLogin;
+
 export class UserService {
   #db: Db;
 
@@ -12,13 +14,13 @@ export class UserService {
     this.#db = getDb(context);
   }
 
-  findById(id: string) {
+  findById(id: string): Promise<User | undefined> {
     return this.#db.query.users
       .findFirst({ where: (users, { eq }) => eq(users.id, id) })
       .execute();
   }
 
-  findByEmail(email: string) {
+  findByEmail(email: string): Promise<User | undefined> {
     return this.#db.query.users
       .findFirst({ where: (users, { eq }) => eq(users.email, email) })
       .execute();
@@ -27,7 +29,7 @@ export class UserService {
   create(
     user: Omit<schema.InsertUser, "createdAt" | "updatedAt">,
     login?: Omit<schema.InsertUserLogin, "createdAt">,
-  ) {
+  ): Promise<User> {
     return this.#db.transaction(async (tx) => {
       const [insertedUser] = await tx
         .insert(schema.users)
@@ -48,7 +50,7 @@ export class UserService {
     });
   }
 
-  addLogin(login: Omit<schema.InsertUserLogin, "createdAt">) {
+  addLogin(login: Omit<schema.InsertUserLogin, "createdAt">): Promise<void> {
     return this.#db.transaction(async (tx) => {
       await tx.insert(schema.userLogins).values({
         ...login,
@@ -67,7 +69,7 @@ export class UserService {
     userId: string,
     provider: schema.SelectUserLogin["provider"],
     providerKey: string,
-  ) {
+  ): Promise<void> {
     return this.#db.transaction(async (tx) => {
       await tx
         .delete(schema.userLogins)
@@ -88,7 +90,10 @@ export class UserService {
     });
   }
 
-  findLogin(provider: schema.SelectUserLogin["provider"], providerKey: string) {
+  findLogin(
+    provider: schema.SelectUserLogin["provider"],
+    providerKey: string,
+  ): Promise<UserLogin | undefined> {
     return this.#db.query.userLogins
       .findFirst({
         where: (userLogins, { and, eq }) =>
@@ -100,7 +105,7 @@ export class UserService {
       .execute();
   }
 
-  getLogins(userId: string) {
+  getLogins(userId: string): Promise<UserLogin[]> {
     return this.#db.query.userLogins
       .findMany({
         where: (userLogins, { eq }) => eq(userLogins.userId, userId),

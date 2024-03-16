@@ -28,13 +28,13 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const authService = new AuthService(context);
 
   await authService.requireAnonymous(request);
-  const flushError = await authService.flush(request);
+  const flashError = await authService.flash(request);
 
   return json(
-    { authError: flushError.error },
+    { authError: flashError.error },
     {
       headers: combineHeaders(
-        flushError.headers,
+        flashError.headers,
         await redirectToHelper.toHeaders(request),
       ),
     },

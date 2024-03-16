@@ -1,9 +1,12 @@
 import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { nanoid } from "nanoid";
 
-import { type User, UserService } from "~/db/services/user.server";
-import { AuthService } from "~/lib/auth/auth.server";
-import { loginProviderDescriptors } from "~/lib/auth/loginProviders";
+import {
+  type User,
+  UserService,
+  type UserLogin,
+} from "~/db/services/user.server";
+import { AuthService, type AuthSession } from "~/lib/auth/auth.server";
 import { LoginProviderSchema } from "~/lib/auth/types";
 import { invariant } from "~/lib/invariant";
 import { redirectToHelper } from "~/lib/redirectTo.server";
@@ -32,84 +35,51 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
   const userService = new UserService(context);
 
   const provider = LoginProviderSchema.parse(params.provider);
-  const profile = await authService.authenticate(provider, request, {
+  const session = await authService.authenticate(provider, request, {
     failureRedirect: "/auth/login",
   });
 
   const currentUser = await getUser(request, authService, userService);
-  const existingLogin = await userService.findLogin(
-    profile.provider,
-    profile.externalId,
+
+  const result = await handleProviderCallback(
+    session,
+    currentUser,
+    userService,
   );
 
-  if (existingLogin && currentUser) {
-    if (existingLogin.userId === currentUser.id) {
+  switch (result.type) {
+    case "LoginMatchedUser": {
       console.log("Already authenticated. Already connected");
       return redirect("/settings");
-    } else {
+    }
+    case "LoginLinkedToOtherUser": {
       console.log("Already authenticated. Connected to another account");
       // TODO: error
       return redirect("/settings");
     }
-  }
-
-  if (currentUser) {
-    if (!loginProviderDescriptors[profile.provider].skipCreation) {
-      await userService.addLogin({
-        userId: currentUser.id,
-        provider: profile.provider,
-        providerKey: profile.externalId,
-        providerEmail: profile.email,
-      });
+    case "AddedLoginForUser": {
+      console.log("Already authenticated. Connected. Re-authenticated");
+      return await login(result.currentUser, "/settings");
     }
-
-    console.log("Already authenticated. Connected. Re-authenticated");
-    return await login(currentUser, "/settings");
-  }
-
-  if (existingLogin) {
-    const user = await userService.findById(existingLogin.userId);
-    invariant(user, "User not found");
-    console.log("Login existing connection");
-    return await login(user);
-  }
-
-  const profileUser = await userService.findByEmail(profile.email);
-  if (profileUser) {
-    if (!loginProviderDescriptors[profile.provider].skipCreation) {
-      await userService.addLogin({
-        userId: profileUser.id,
-        provider: profile.provider,
-        providerKey: profile.externalId,
-        providerEmail: profile.email,
-      });
+    case "LoginWithoutUser": {
+      console.log("Login existing connection");
+      return await login(result.foundUser);
     }
-
-    console.log("Connected");
-    return await login(profileUser);
+    case "FoundUserProfile": {
+      console.log("Connected");
+      return await login(result.profileUser);
+    }
+    case "CreatedNewUser": {
+      console.log("New user created");
+      return await login(result.newUser);
+    }
+    default: {
+      invariant(result, "No match");
+    }
   }
-
-  const userId = nanoid();
-  const newUser = await userService.create(
-    {
-      id: userId,
-      email: profile.email,
-    },
-    loginProviderDescriptors[profile.provider].skipCreation
-      ? undefined
-      : {
-          userId,
-          provider: profile.provider,
-          providerKey: profile.externalId,
-          providerEmail: profile.email,
-        },
-  );
-
-  console.log("New user created");
-  return await login(newUser);
 
   async function login(user: User, redirectToUrl?: string) {
-    const redirectTo = await redirectToHelper.flush(request);
+    const redirectTo = await redirectToHelper.flash(request);
 
     return await authService.login(user, {
       redirectTo: redirectToUrl || redirectTo.url,
@@ -118,4 +88,66 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       },
     });
   }
+}
+
+export async function handleProviderCallback(
+  session: AuthSession,
+  currentUser: User | undefined,
+  userService: UserService,
+) {
+  const existingLogin = await userService.findLogin(
+    session.provider,
+    session.externalId,
+  );
+
+  if (existingLogin && currentUser) {
+    if (existingLogin.userId === currentUser.id) {
+      return { type: "LoginMatchedUser" } as const;
+    } else {
+      return { type: "LoginLinkedToOtherUser" } as const;
+    }
+  }
+
+  if (currentUser) {
+    await userService.addLogin(makeUserLogin(currentUser.id, session));
+
+    return { type: "AddedLoginForUser", currentUser } as const;
+  }
+
+  if (existingLogin) {
+    const foundUser = await userService.findById(existingLogin.userId);
+    invariant(foundUser, "User not found");
+
+    return { type: "LoginWithoutUser", foundUser } as const;
+  }
+
+  const profileUser = await userService.findByEmail(session.email);
+  if (profileUser) {
+    await userService.addLogin(makeUserLogin(profileUser.id, session));
+
+    return { type: "FoundUserProfile", profileUser } as const;
+  }
+
+  const userId = nanoid();
+  const newUser = await userService.create(
+    {
+      id: userId,
+      email: session.email,
+    },
+    makeUserLogin(userId, session),
+  );
+
+  return { type: "CreatedNewUser", newUser } as const;
+}
+
+function makeUserLogin(
+  userId: string,
+  session: AuthSession,
+): Omit<UserLogin, "createdAt"> {
+  return {
+    userId,
+    provider: session.provider,
+    providerKey: session.externalId,
+    providerEmail: session.email,
+  };
 }
