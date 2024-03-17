@@ -14,14 +14,15 @@
     "@remix-run/router",
     "@radix-ui/**",
     "@playwright/test",
-    "clsx"
+    "clsx",
+    "sonner"
   ],
   "sqltools.connections": [
     {
       "previewLimit": 50,
       "driver": "SQLite",
       "name": "db",
-      "database": "${workspaceFolder:remix-starter}/db.sqlite"
+      "database": "${workspaceFolder:remix-starter}/db/db.sqlite"
     }
   ]
 }

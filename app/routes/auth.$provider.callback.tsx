@@ -1,12 +1,18 @@
 import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { nanoid } from "nanoid";
 
-import { type User, UserService } from "~/db/services/user.server";
-import { AuthService } from "~/lib/auth/auth.server";
+import {
+  type User,
+  UserService,
+  type UserLogin,
+} from "~/db/services/user.server";
+import { AuthService, type AuthSession } from "~/lib/auth/auth.server";
 import { loginProviderDescriptors } from "~/lib/auth/loginProviders";
 import { LoginProviderSchema } from "~/lib/auth/types";
 import { invariant } from "~/lib/invariant";
 import { redirectToHelper } from "~/lib/redirectTo.server";
+import { Toasts } from "~/lib/toasts.server";
+import { combineHeaders } from "~/lib/web";
 
 async function getUser(
   request: Request,
@@ -30,92 +36,160 @@ async function getUser(
 export async function loader({ params, request, context }: LoaderFunctionArgs) {
   const authService = new AuthService(context);
   const userService = new UserService(context);
+  const toasts = new Toasts(context);
 
   const provider = LoginProviderSchema.parse(params.provider);
-  const profile = await authService.authenticate(provider, request, {
+  const providerName = loginProviderDescriptors[provider].name;
+  const session = await authService.authenticate(provider, request, {
     failureRedirect: "/auth/login",
   });
 
   const currentUser = await getUser(request, authService, userService);
+
+  const result = await handleProviderCallback(
+    session,
+    currentUser,
+    userService,
+  );
+
+  switch (result.type) {
+    case "AlreadyLinked": {
+      return redirect("/settings", {
+        headers: await toasts.create({
+          type: "info",
+          title: `Account Linking`,
+          description: `Your ${providerName} account is already linked to this profile.`,
+        }),
+      });
+    }
+    case "Conflict": {
+      return redirect("/settings", {
+        headers: await toasts.create({
+          type: "error",
+          title: `Account Linking Error`,
+          description: `The ${providerName} profile you're trying to link is already linked to another user.`,
+        }),
+      });
+    }
+    case "Linked": {
+      return await login({
+        user: result.currentUser,
+        redirectToUrl: "/settings",
+        headers: await toasts.create({
+          type: "success",
+          title: `Account Linked`,
+          description: `Your ${providerName} account has been linked successfully.`,
+        }),
+      });
+    }
+    case "Login": {
+      return await login({
+        user: result.foundUser,
+      });
+    }
+    case "AutomaticallyLinked": {
+      return await login({
+        user: result.profileUser,
+        headers: await toasts.create({
+          type: "info",
+          title: "Account Linked",
+          description: `Your ${providerName} profile was automatically linked to your existing account.`,
+        }),
+      });
+    }
+    case "UserCreated": {
+      return await login({
+        user: result.newUser,
+        headers: await toasts.create({
+          type: "success",
+          title: "Account Created",
+          description: `You can now log in with ${providerName}.`,
+        }),
+      });
+    }
+    default: {
+      invariant(result, "No match");
+    }
+  }
+
+  async function login({
+    user,
+    redirectToUrl,
+    headers,
+  }: {
+    user: User;
+    redirectToUrl?: string;
+    headers?: Headers;
+  }) {
+    const redirectTo = await redirectToHelper.flash(request);
+
+    return await authService.login(user, {
+      redirectTo: redirectToUrl || redirectTo.url,
+      init: {
+        headers: combineHeaders(redirectTo.headers, headers),
+      },
+    });
+  }
+}
+
+export async function handleProviderCallback(
+  session: AuthSession,
+  currentUser: User | undefined,
+  userService: UserService,
+) {
   const existingLogin = await userService.findLogin(
-    profile.provider,
-    profile.externalId,
+    session.provider,
+    session.externalId,
   );
 
   if (existingLogin && currentUser) {
     if (existingLogin.userId === currentUser.id) {
-      console.log("Already authenticated. Already connected");
-      return redirect("/settings");
+      return { type: "AlreadyLinked" } as const;
     } else {
-      console.log("Already authenticated. Connected to another account");
-      // TODO: error
-      return redirect("/settings");
+      return { type: "Conflict" } as const;
     }
   }
 
   if (currentUser) {
-    if (!loginProviderDescriptors[profile.provider].skipCreation) {
-      await userService.addLogin({
-        userId: currentUser.id,
-        provider: profile.provider,
-        providerKey: profile.externalId,
-        providerEmail: profile.email,
-      });
-    }
+    await userService.addLogin(makeUserLogin(currentUser.id, session));
 
-    console.log("Already authenticated. Connected. Re-authenticated");
-    return await login(currentUser, "/settings");
+    return { type: "Linked", currentUser } as const;
   }
 
   if (existingLogin) {
-    const user = await userService.findById(existingLogin.userId);
-    invariant(user, "User not found");
-    console.log("Login existing connection");
-    return await login(user);
+    const foundUser = await userService.findById(existingLogin.userId);
+    invariant(foundUser, "User not found");
+
+    return { type: "Login", foundUser } as const;
   }
 
-  const profileUser = await userService.findByEmail(profile.email);
+  const profileUser = await userService.findByEmail(session.email);
   if (profileUser) {
-    if (!loginProviderDescriptors[profile.provider].skipCreation) {
-      await userService.addLogin({
-        userId: profileUser.id,
-        provider: profile.provider,
-        providerKey: profile.externalId,
-        providerEmail: profile.email,
-      });
-    }
+    await userService.addLogin(makeUserLogin(profileUser.id, session));
 
-    console.log("Connected");
-    return await login(profileUser);
+    return { type: "AutomaticallyLinked", profileUser } as const;
   }
 
   const userId = nanoid();
   const newUser = await userService.create(
     {
       id: userId,
-      email: profile.email,
+      email: session.email,
     },
-    loginProviderDescriptors[profile.provider].skipCreation
-      ? undefined
-      : {
-          userId,
-          provider: profile.provider,
-          providerKey: profile.externalId,
-          providerEmail: profile.email,
-        },
+    makeUserLogin(userId, session),
   );
 
-  console.log("New user created");
-  return await login(newUser);
+  return { type: "UserCreated", newUser } as const;
+}
 
-  async function login(user: User, redirectToUrl?: string) {
-    const redirectTo = await redirectToHelper.flush(request);
-
-    return await authService.login(user, {
-      redirectTo: redirectToUrl || redirectTo.url,
-      init: {
-        headers: redirectTo.headers,
-      },
-    });
-  }
+function makeUserLogin(
+  userId: string,
+  session: AuthSession,
+): Omit<UserLogin, "createdAt"> {
+  return {
+    userId,
+    provider: session.provider,
+    providerKey: session.externalId,
+    providerEmail: session.email,
+  };
 }

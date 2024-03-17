@@ -16,6 +16,8 @@ import { LoginProvider } from "~/lib/auth/types";
 import { HoneypotInputs } from "~/lib/honeypot";
 import { Honeypot } from "~/lib/honeypot/.server";
 import { redirectToHelper } from "~/lib/redirectTo.server";
+import { Toasts } from "~/lib/toasts.server";
+import { combineHeaders } from "~/lib/web";
 
 export const meta: MetaFunction = () => {
   return [{ title: "Verify code" }];
@@ -25,15 +27,15 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const authService = new AuthService(context);
 
   await authService.requireAnonymous(request);
-  const flush = await authService.flush(request);
-  if (!flush.email) {
+  const flash = await authService.flash(request);
+  if (!flash.email) {
     return redirect("/auth/login");
   }
 
   return json(
-    { authError: flush.error },
+    { authError: flash.error },
     {
-      headers: flush.headers,
+      headers: flash.headers,
     },
   );
 }
@@ -42,6 +44,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const authService = new AuthService(context);
   const honeypot = new Honeypot(context);
   const userService = new UserService(context);
+  const toasts = new Toasts(context);
 
   await authService.requireAnonymous(request);
   const formData = await request.clone().formData();
@@ -57,22 +60,26 @@ export async function action({ request, context }: ActionFunctionArgs) {
 
   const email = profile.email;
   let user = await userService.findByEmail(email);
+  let toast: undefined | Headers;
   if (!user) {
     const userId = nanoid();
     user = await userService.create({
       id: userId,
       email,
     });
-
-    console.log("New user created from code");
+    toast = await toasts.create({
+      type: "info",
+      title: "Account created",
+      description: "You can now log in using your email.",
+    });
   }
 
-  const redirectTo = await redirectToHelper.flush(request);
+  const redirectTo = await redirectToHelper.flash(request);
 
   return await authService.login(user, {
     redirectTo: redirectTo.url,
     init: {
-      headers: redirectTo.headers,
+      headers: combineHeaders(redirectTo.headers, toast),
     },
   });
 }

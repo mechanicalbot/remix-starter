@@ -14,7 +14,7 @@ import {
   useLoaderData,
   useSubmit,
 } from "@remix-run/react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import {
   Button,
@@ -26,6 +26,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Icons,
+  Toaster,
+  TooltipProvider,
+  showToast,
 } from "~/components";
 import {
   GeneralErrorBoundary,
@@ -36,6 +39,8 @@ import { useOptionalUser, useUser } from "~/lib/auth/hooks";
 import { getPublicEnv } from "~/lib/env.server";
 import { HoneypotProvider } from "~/lib/honeypot";
 import { Honeypot } from "~/lib/honeypot/.server";
+import { Toasts } from "~/lib/toasts.server";
+import { combineHeaders } from "~/lib/web";
 
 import "./styles/tailwind.css";
 
@@ -48,16 +53,25 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   return context.time("root#loader", async () => {
     const authService = new AuthService(context);
     const honeypot = new Honeypot(context);
+    const toasts = new Toasts(context);
 
     const user = await authService.getUser(request);
     const honeyProps = honeypot.getInputProps();
 
-    return json({
-      user,
-      honeyProps,
-      clientIp: context.clientIp,
-      ENV: getPublicEnv(context.env),
-    });
+    const toast = await toasts.get(request);
+
+    return json(
+      {
+        user,
+        honeyProps,
+        clientIp: context.clientIp,
+        ENV: getPublicEnv(context.env),
+        toast: toast.toast,
+      },
+      {
+        headers: combineHeaders(toast.headers),
+      },
+    );
   });
 }
 
@@ -68,6 +82,11 @@ const links = [{ to: "/counter", text: "Counter" }] satisfies Array<{
 
 function App() {
   const data = useLoaderData<typeof loader>();
+  useEffect(() => {
+    if (data.toast) {
+      showToast(data.toast);
+    }
+  }, [data.toast]);
   const user = useOptionalUser();
 
   return (
@@ -102,6 +121,7 @@ function App() {
           <Outlet />
         </main>
       </div>
+      <Toaster />
     </Document>
   );
 }
@@ -148,9 +168,11 @@ function UserDropdown() {
 function AppWithProviders() {
   const data = useLoaderData<typeof loader>();
   return (
-    <HoneypotProvider {...data.honeyProps}>
-      <App />
-    </HoneypotProvider>
+    <TooltipProvider>
+      <HoneypotProvider {...data.honeyProps}>
+        <App />
+      </HoneypotProvider>
+    </TooltipProvider>
   );
 }
 

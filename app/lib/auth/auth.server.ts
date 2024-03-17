@@ -42,8 +42,6 @@ export class AuthService {
   #authenticator: Authenticator<AuthSession>;
 
   constructor(context: AppLoadContext) {
-    const secrets = context.env.COOKIE_SECRET.split(",");
-
     this.#authSessionStorage = createCookieSessionStorage<{
       user: UserSession;
       issuedAt: number;
@@ -53,7 +51,7 @@ export class AuthService {
         sameSite: "lax",
         path: "/",
         httpOnly: true,
-        secrets,
+        secrets: context.env.COOKIE_SECRET,
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 60 * 24 * 7, // week
       },
@@ -65,7 +63,7 @@ export class AuthService {
         sameSite: "lax",
         path: "/",
         httpOnly: true,
-        secrets,
+        secrets: context.env.COOKIE_SECRET,
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 10, // 10 min
       },
@@ -293,7 +291,7 @@ export class AuthService {
     }
   }
 
-  async flush(request: Request) {
+  async flash(request: Request) {
     const session = await this.#connectionSessionStorage.getSession(
       request.headers.get("Cookie"),
     );

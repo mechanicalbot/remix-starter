@@ -21,7 +21,7 @@ class RedirectTo {
     return headers;
   }
 
-  async flush(request: Request) {
+  async flash(request: Request) {
     const url: string | null = await redirectCookie.parse(
       request.headers.get("Cookie"),
     );

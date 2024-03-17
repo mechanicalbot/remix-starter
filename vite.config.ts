@@ -31,11 +31,12 @@ export default defineConfig({
         },
       }),
     tsconfigPaths(),
-    devServer({
-      injectClientScript: false,
-      entry: "./server/index.ts",
-      exclude: [/^\/(app)\/.+/, ...defaultOptions.exclude],
-    }),
+    !isStorybook &&
+      devServer({
+        injectClientScript: false,
+        entry: "./server/index.ts",
+        exclude: [/^\/(app)\/.+/, ...defaultOptions.exclude],
+      }),
   ],
   test: {
     include: ["./app/**/*.{test,spec}.{ts,tsx}"],

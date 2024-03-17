@@ -13,6 +13,7 @@ import { compress } from "hono/compress";
 import { getClientIPAddress } from "remix-utils/get-client-ip-address";
 
 import { EnvSchema } from "~/lib/env.server.js";
+import { lazyObj } from "~/lib/utils.js";
 
 import { cache, importDevBuild, logger, measurer, remix } from "./lib/hono";
 
@@ -52,12 +53,13 @@ hono.all(
         // eslint-disable-next-line import/no-unresolved
         () => import("../build/server/remix.js") as Promise<ServerBuild>
       : importDevBuild,
-    getLoadContext: (ctx) => ({
-      env: EnvSchema.parse(getEnv(ctx)),
-      clientIp: getClientIPAddress(ctx.req.raw),
-      db: new Database("./db/db.sqlite"),
-      time: ctx.var.measurer.time,
-    }),
+    getLoadContext: (ctx) =>
+      lazyObj({
+        env: () => EnvSchema.parse(getEnv(ctx)),
+        clientIp: () => getClientIPAddress(ctx.req.raw),
+        db: () => new Database("./db/db.sqlite"),
+        time: () => ctx.var.measurer.time,
+      }),
   }),
 );
 

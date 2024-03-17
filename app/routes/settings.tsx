@@ -5,16 +5,20 @@ import {
   type MetaFunction,
 } from "@remix-run/node";
 import { Form, useLoaderData, useNavigation } from "@remix-run/react";
+import { namedAction } from "remix-utils/named-action";
+import { z } from "zod";
 
 import { Button, Divider, Icons, Input, Label } from "~/components";
-import { UserService } from "~/db/services/user.server";
+import { UserService, type User } from "~/db/services/user.server";
 import { AuthService } from "~/lib/auth/auth.server";
 import {
   LoginProviderForm,
   loginProviderDescriptors,
   socialLoginProviders,
 } from "~/lib/auth/loginProviders";
+import { LoginProviderSchema } from "~/lib/auth/types";
 import { invariant } from "~/lib/invariant";
+import { Toasts } from "~/lib/toasts.server";
 
 export const meta: MetaFunction<typeof loader> = () => [
   {
@@ -31,31 +35,47 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     userService.findById(session.id),
     userService.getLogins(session.id),
   ]);
-
   invariant(user, "User not found");
 
   return json({
     user,
     logins,
+    canDelete: canDeleteLogin(user, logins),
   });
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
   const authService = new AuthService(context);
   const userService = new UserService(context);
+  const toasts = new Toasts(context);
 
-  const session = await authService.requireUser(request);
-  const formData = await request.formData();
+  return namedAction(request, {
+    async unlink() {
+      const session = await authService.requireUser(request);
+      const [user, logins] = await Promise.all([
+        userService.findById(session.id),
+        userService.getLogins(session.id),
+      ]);
+      invariant(user, "User not found");
+      invariant(canDeleteLogin(user, logins), "Cannot delete last login");
 
-  await userService.removeLogin(
-    session.id,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    formData.get("provider") as any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    formData.get("providerKey") as any,
-  );
+      const formData = await request.formData();
+      const provider = LoginProviderSchema.parse(formData.get("provider"));
+      const providerName = loginProviderDescriptors[provider].name;
+      const providerKey = z.string().parse(formData.get("providerKey"));
+      await userService.removeLogin(session.id, provider, providerKey);
 
-  return json({});
+      return json(
+        {},
+        {
+          headers: await toasts.create({
+            type: "success",
+            title: `${providerName} profile unlinked successfully`,
+          }),
+        },
+      );
+    },
+  });
 }
 
 export default function Profile() {
@@ -120,7 +140,9 @@ export default function Profile() {
                       type="submit"
                       size="icon"
                       variant="destructive"
-                      disabled={isLoading}
+                      disabled={isLoading || !data.canDelete}
+                      name="_action"
+                      value="unlink"
                       title="Unlink"
                     >
                       <Icons.Unlink className="h-4 w-4" />
@@ -173,4 +195,12 @@ function Section({
       <div className="overflow-x-visible sm:col-span-2">{children}</div>
     </div>
   );
+}
+
+function canDeleteLogin(user: User, logins: unknown[]) {
+  if (!user.email && logins.length === 1) {
+    return false;
+  }
+
+  return true;
 }

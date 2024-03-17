@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const EnvSchema = z.object({
-  COOKIE_SECRET: z.string(),
+  COOKIE_SECRET: z.string().transform((secrets) => secrets.split(",")),
   TOTP_SECRET: z.string(),
   HONEYPOT_SECRET: z.string(),
   GITHUB_CLIENT_ID: z.string(),

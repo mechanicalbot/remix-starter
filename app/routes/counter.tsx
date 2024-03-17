@@ -6,6 +6,8 @@ import {
 } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 
+import { Toasts } from "~/lib/toasts.server";
+
 const db = {
   _count: 0,
   async getCount() {
@@ -20,9 +22,15 @@ export async function loader(_: LoaderFunctionArgs) {
   return json({ count: await db.getCount() });
 }
 
-export async function action(_: ActionFunctionArgs) {
+export async function action({ context }: ActionFunctionArgs) {
   await db.increment();
-  return redirect("/counter");
+  const toasts = new Toasts(context);
+
+  return redirect("/counter", {
+    headers: await toasts.create({
+      title: `Incremented to ${await db.getCount()}`,
+    }),
+  });
 }
 
 export default function Counter() {
