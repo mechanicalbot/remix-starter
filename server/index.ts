@@ -17,13 +17,6 @@ import { lazyObj } from "~/lib/utils.js";
 
 import { cache, importDevBuild, logger, measurer, remix } from "./lib/hono";
 
-const mode =
-  process.env.NODE_ENV === "test" || !process.env.NODE_ENV
-    ? "development"
-    : process.env.NODE_ENV;
-
-const isProduction = mode === "production";
-
 export const hono = new Hono();
 
 hono.use("*", compress());
@@ -47,11 +40,11 @@ hono.all(
   measurer(),
   remix({
     mode: process.env.NODE_ENV,
-    build: isProduction
+    build: process.env.NODE_ENV === "production"
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        // eslint-disable-next-line import/no-unresolved
-        () => import("../build/server/remix.js") as Promise<ServerBuild>
+      // @ts-ignore
+      // eslint-disable-next-line import/no-unresolved
+      () => import("../build/server/remix.js") as Promise<ServerBuild>
       : importDevBuild,
     getLoadContext: (ctx) =>
       lazyObj({
@@ -66,7 +59,7 @@ hono.all(
 console.log("Migrating database...");
 migrateDb();
 
-if (isProduction) {
+if (process.env.NODE_ENV === "production") {
   serve(
     {
       ...hono,

@@ -10,6 +10,10 @@ esbuild
     packages: "external",
     bundle: true,
     logLevel: "info",
+    minifySyntax: true,
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("production"),
+    },
   })
   .catch((error: unknown) => {
     console.error(error);
